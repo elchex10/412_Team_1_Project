@@ -1,0 +1,5 @@
+project:
+  name: Web-Based Medical Heart Rate Calculator
+  tz: America/New_York
+  adrFolder: ./docs/adr
+  packages: []
