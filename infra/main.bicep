@@ -36,6 +36,14 @@ resource webApp 'Microsoft.Web/sites@2023-12-01' = {
     serverFarmId: hostingPlan.id
     httpsOnly: true
     siteConfig: {
+      //Erika added a application environment setting
+      appSettings: [ //add a setting that automatically configures the application environment
+        {
+          name: 'NODE_ENV' // name of the setting is NODE_ENV
+          value: 'development' //used for automatically configures the application environment
+        }
+      ]
+
       linuxFxVersion: 'NODE|24-lts'
       ftpsState: 'Disabled'
     }
