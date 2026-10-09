@@ -1,0 +1,28 @@
+
+name: Bicep Validation
+
+on:
+  pull_request:
+    branches:
+      - main
+  push:
+    branches:
+      - main
+
+jobs:
+  validate-bicep:
+    name: Validate Bicep
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Check Azure CLI
+        run: az version
+
+      - name: Install Bicep
+        run: az bicep install
+
+      - name: Validate Bicep infrastructure
+        run: az bicep build --file infra/main.bicep --stdout > /dev/null
