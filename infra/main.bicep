@@ -35,6 +35,7 @@ resource webApp 'Microsoft.Web/sites@2023-12-01' = {
     Project: 'HeartRateCalculator'
     Team: 'HCDD412-Team1'
     Environment: 'Development'
+    Roles: 'Continuous Integration (Code Integration), Continuous Deployment, Monitoring, Verification, Continuous Improvement'
   }
 }
 
