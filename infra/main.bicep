@@ -54,6 +54,11 @@ resource webApp 'Microsoft.Web/sites@2023-12-01' = {
     Environment: environment
     // Timothy: Added roles responsible for the project
     Roles: 'Timothy: Continuous Integration (Code Integration, improvements, and automatic testing), Eric and Erika: Frontend, Giovanni: Backend, Other roles to complete for the project: Continuous Deployment, Monitoring, Verification, Continuous Improvement'
+    // Eric: Added resource governance & tracking metadata
+    ManagedBy: 'Bicep'
+    CreatedBy: 'Team1'
+    DeployedDate: '2026-10-09'
+
   }
 }
 
