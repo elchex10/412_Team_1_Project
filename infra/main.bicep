@@ -1,10 +1,11 @@
+// Giovanni: Initial Azure infrastructure setup for our Heart Rate Calculator.
 
 targetScope = 'resourceGroup'
 
 @description('Azure region')
 param location string = 'eastus'
 
-// Timothy Added Deployment Environment Parameter
+// Timothy Added Deployment Environment Parameter 
 @description('Deployment environment.')
 @allowed([
   'dev'
@@ -13,9 +14,12 @@ param location string = 'eastus'
 ])
 param environment string = 'dev'
 
+// Giovanni: Added a unique web app name to avoid conflicts with other Azure resources.
 @description('Unique team web application name')
 param webAppName string = 'hcdd412-team1-${uniqueString(resourceGroup().id)}'
 
+// Giovanni: Set up the Linux hosting plan using the F1 free tier.
+// We chose this to keep costs down while working on our project.
 resource hostingPlan 'Microsoft.Web/serverfarms@2023-12-01' = {
   name: 'hcdd412-team1-free-plan'
   location: location
@@ -29,6 +33,8 @@ resource hostingPlan 'Microsoft.Web/serverfarms@2023-12-01' = {
   }
 }
 
+// Giovanni: Created our web app and connected it to the hosting plan.
+// HTTPS is enabled, and FTP access is disabled.
 resource webApp 'Microsoft.Web/sites@2023-12-01' = {
   name: webAppName
   location: location
@@ -48,6 +54,8 @@ resource webApp 'Microsoft.Web/sites@2023-12-01' = {
       ftpsState: 'Disabled'
     }
   }
+
+  // Giovanni: Added tags so we can easily identify our resources in Azure.
   tags: {
     Project: 'HeartRateCalculator'
     Team: 'HCDD412-Team1'
@@ -62,5 +70,6 @@ resource webApp 'Microsoft.Web/sites@2023-12-01' = {
   }
 }
 
+// Giovanni: Added outputs so our team can check the website URL and hosting tier.
 output websiteUrl string = 'https://${webApp.properties.defaultHostName}'
 output hostingTier string = hostingPlan.sku.name
