@@ -1,0 +1,2 @@
+Testing GitHub Actions and branch protection.
+This test does not modify our Azure infrastructure.
