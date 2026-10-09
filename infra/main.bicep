@@ -35,7 +35,8 @@ resource webApp 'Microsoft.Web/sites@2023-12-01' = {
     Project: 'HeartRateCalculator'
     Team: 'HCDD412-Team1'
     Environment: 'Development'
-    Roles: 'Continuous Integration (Code Integration), Continuous Deployment, Monitoring, Verification, Continuous Improvement'
+    // Timothy: Added roles responsible for the project
+    Roles: 'Timothy: Continuous Integration (Code Integration, improvements, and automatic testing), Eric and Erika: Frontend, Giovanni: Backend, Other roles to complete for the project: Continuous Deployment, Monitoring, Verification, Continuous Improvement'
   }
 }
 
