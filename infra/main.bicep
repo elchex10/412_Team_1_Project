@@ -4,6 +4,14 @@ targetScope = 'resourceGroup'
 @description('Azure region')
 param location string = 'eastus'
 
+@description('Deployment environment.')
+@allowed([
+  'dev'
+  'staging'
+  'prod'
+])
+param environment string = 'dev'
+
 @description('Unique team web application name')
 param webAppName string = 'hcdd412-team1-${uniqueString(resourceGroup().id)}'
 
@@ -34,7 +42,7 @@ resource webApp 'Microsoft.Web/sites@2023-12-01' = {
   tags: {
     Project: 'HeartRateCalculator'
     Team: 'HCDD412-Team1'
-    Environment: 'Development'
+    Environment: environment
     // Timothy: Added roles responsible for the project
     Roles: 'Timothy: Continuous Integration (Code Integration, improvements, and automatic testing), Eric and Erika: Frontend, Giovanni: Backend, Other roles to complete for the project: Continuous Deployment, Monitoring, Verification, Continuous Improvement'
   }
