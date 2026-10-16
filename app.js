@@ -1,8 +1,10 @@
-const greeting = "Hello team 1";
-console.log(greeting);
 
-function calculateSum(a, b) {
-    return a + b;
+
+function displayCurrentHeartRate(currentHeartRate) {
+
+
+    return currentHeartRate;
+
+    
 }
-
-console.log("Sum: " + calculateSum(5, 10));
+console.log("Current Heart Rate: " + displayCurrentHeartRate(70))
