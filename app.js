@@ -64,3 +64,36 @@ module.exports = {
     validateAge,
     processHeartRateInput
 };
+
+// HCDD 412 - Team 1
+// enl5197 - Sprint 1
+// Issue #11 - Calculate Estimated Heartrate Range
+// Issue #12 - View Current Heartrate
+
+function calculateEstimatedHeartRateRange(age) {
+    
+    const MaximumHeartRate = 220 - age; 
+
+    const ModerateMin = MaximumHeartRate * .50; 
+    const ModerateMax = MaximumHeartRate * .70; 
+
+    const VigorousMin = MaximumHeartRate * .70; 
+    const VigorousMax = MaximumHeartRate * .85; 
+
+    return{
+        MaximumHeartRate, 
+       moderateZone: `${ModerateMin}-${ModerateMax}`,
+        vigorousZone: `${VigorousMin}-${VigorousMax}`
+    };
+    }
+
+function displayCurrentHeartRate(currentHeartRate) {
+
+
+    return currentHeartRate;
+
+    
+}
+console.log("Current Heart Rate: " + displayCurrentHeartRate(70))
+console.log("Estimated Heart Rate Range:");
+console.log(calculateEstimatedHeartRateRange(20));
