@@ -1,5 +1,10 @@
-const greeting = "Hello team 1";
-console.log(greeting);
+
+const assert = require("node:assert/strict");
+
+// HCDD 412 - Team 1
+// GMat97 - Sprint 1
+// Issue #8 - Correct Calculation Behavior
+// Issue #9 - Prevent Invalid Input
 
 function calculateMaxHeartRate(age) {
     if (!Number.isInteger(age) || age <= 0 || age > 120) {
@@ -9,18 +14,53 @@ function calculateMaxHeartRate(age) {
     return 220 - age;
 }
 
-// Test the calculation
-console.log("Age 25:", calculateMaxHeartRate(25));
-console.log("Age 40:", calculateMaxHeartRate(40));
-console.log("Age 60:", calculateMaxHeartRate(60));
+function validateAge(age) {
+    if (age === null || age === undefined || age === "") {
+        return "Please enter your age.";
+    }
 
-module.exports = { calculateMaxHeartRate };
-const firstResult = calculateMaxHeartRate(25);
-const secondResult = calculateMaxHeartRate(25);
+    const numberAge = typeof age === "string"
+        ? (/^\d+$/.test(age.trim()) ? Number(age.trim()) : NaN)
+        : age;
 
-console.assert(
-    firstResult === secondResult,
-    "Repeated calculations should match"
-);
+    if (!Number.isInteger(numberAge) || numberAge <= 0 || numberAge > 120) {
+        return "Please enter a valid age between 1 and 120.";
+    }
 
-console.log("Consistency test passed:", firstResult === secondResult);
+    return null;
+}
+
+function processHeartRateInput(age) {
+    const error = validateAge(age);
+
+    if (error) {
+        return { error: error, result: null };
+    }
+
+    return {
+        error: null,
+        result: calculateMaxHeartRate(Number(age))
+    };
+}
+
+// Tests
+if (require.main === module) {
+    assert.equal(calculateMaxHeartRate(25), 195);
+    assert.equal(calculateMaxHeartRate(40), 180);
+    assert.equal(calculateMaxHeartRate(60), 160);
+
+    assert.equal(processHeartRateInput("25").result, 195);
+    assert.equal(processHeartRateInput("").result, null);
+    assert.equal(processHeartRateInput(-5).result, null);
+    assert.equal(processHeartRateInput("abc").result, null);
+    assert.equal(processHeartRateInput(121).result, null);
+    assert.equal(processHeartRateInput(25.5).result, null);
+
+    console.log("All Sprint 1 tests passed!");
+}
+
+module.exports = {
+    calculateMaxHeartRate,
+    validateAge,
+    processHeartRateInput
+};
