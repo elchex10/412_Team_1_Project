@@ -1,5 +1,3 @@
-const assert = require("node:assert/strict");
-
 // Deployment process runner
 // HCDD 412 - Team 1
 // elchex10 - Sprint 1
@@ -74,6 +72,15 @@ function processHeartRateInput(age) {
     };
 }
 
+// Function to calculate target heart rate range (50% - 85%)
+function calculateTargetZone(maxHeartRate) {
+    if (!maxHeartRate) return null;
+    return {
+        min: Math.round(maxHeartRate * 0.5),
+        max: Math.round(maxHeartRate * 0.85)
+    };
+}
+
 // HCDD 412 - Team 1
 // tzp5401 - Sprint 1
 // Issue #15 - Validate Required Input Fields
@@ -123,11 +130,31 @@ function displayCurrentHeartRate(currentHeartRate) {
     return currentHeartRate;
 }
 
+// Browser UI handling
+if (typeof document !== "undefined") {
+    const form = document.querySelector("form");
+    if (form) {
+        form.addEventListener("submit", (e) => {
+            e.preventDefault();
+            const ageInput = document.querySelector('input[type="number"]') || document.querySelector("#age");
+            const result = document.querySelector("#result");
+
+            const { result: mhr } = processHeartRateInput(ageInput.value);
+            if (mhr && result) {
+                const zone = calculateTargetZone(mhr);
+                result.textContent = `Max: ${mhr} bpm | Target: ${zone.min}-${zone.max} bpm`;
+            }
+        });
+    }
+}
+
 // Execute deployment check
 deployCalculator("production");
 
-// Tests & CLI output
-if (require.main === module) {
+// Tests & CLI output (Node.js only)
+if (typeof require !== "undefined" && require.main === module) {
+    const assert = require("node:assert/strict");
+
     assert.equal(calculateMaxHeartRate(25), 195);
     assert.equal(calculateMaxHeartRate(40), 180);
     assert.equal(calculateMaxHeartRate(60), 160);
@@ -151,10 +178,12 @@ if (require.main === module) {
     console.log(calculateEstimatedHeartRateRange(20));
 }
 
+// Export for automated CI tests (Node.js)
 if (typeof module !== "undefined" && module.exports) {
     module.exports = {
         deployCalculator,
         calculateMaxHeartRate,
+        calculateTargetZone,
         validateAge,
         processHeartRateInput,
         submitHeartRateCalculation,
