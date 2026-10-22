@@ -1,0 +1,14 @@
+{
+  "name": "heart-rate-calculator",
+  "version": "1.0.0",
+  "private": true,
+  "description": "HCDD 412 Team 1 heart rate calculator",
+  "main": "app.js",
+  "scripts": {
+    "start": "node app.js",
+    "test": "node -e \"require('./app').runSelfTests()\""
+  },
+  "engines": {
+    "node": ">=24"
+  }
+}

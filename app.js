@@ -148,11 +148,68 @@ if (typeof document !== "undefined") {
     }
 }
 
+function createServer() {
+    const http = require("node:http");
+
+    return http.createServer((request, response) => {
+        if (request.url === "/health") {
+            response.writeHead(200, { "Content-Type": "application/json" });
+            response.end(JSON.stringify({ status: "ok" }));
+            return;
+        }
+
+        if (request.method === "GET" && (request.url === "/" || request.url === "/index.html")) {
+            response.writeHead(200, { "Content-Type": "text/html; charset=utf-8" });
+            response.end(`<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Heart Rate Calculator</title>
+</head>
+<body>
+    <main>
+        <h1>Heart Rate Calculator</h1>
+        <form>
+            <label for="age">Age</label>
+            <input id="age" name="age" type="number" min="1" max="120" required>
+            <button type="submit">Calculate</button>
+        </form>
+        <p id="result" aria-live="polite"></p>
+    </main>
+    <script>
+        const form = document.querySelector("form");
+        const ageInput = document.querySelector("#age");
+        const result = document.querySelector("#result");
+
+        form.addEventListener("submit", (event) => {
+            event.preventDefault();
+            const age = Number(ageInput.value);
+            if (!Number.isInteger(age) || age < 1 || age > 120) {
+                result.textContent = "Please enter a valid age between 1 and 120.";
+                return;
+            }
+
+            const maximum = 220 - age;
+            result.textContent = "Max: " + maximum + " bpm | Target: "
+                + Math.round(maximum * 0.5) + "-" + Math.round(maximum * 0.85) + " bpm";
+        });
+    </script>
+</body>
+</html>`);
+            return;
+        }
+
+        response.writeHead(404, { "Content-Type": "text/plain; charset=utf-8" });
+        response.end("Not found");
+    });
+}
+
 // Execute deployment check
 deployCalculator("production");
 
 // Tests & CLI output (Node.js only)
-if (typeof require !== "undefined" && require.main === module) {
+function runSelfTests() {
     const assert = require("node:assert/strict");
 
     assert.equal(calculateMaxHeartRate(25), 195);
@@ -181,6 +238,8 @@ if (typeof require !== "undefined" && require.main === module) {
 // Export for automated CI tests (Node.js)
 if (typeof module !== "undefined" && module.exports) {
     module.exports = {
+        createServer,
+        runSelfTests,
         deployCalculator,
         calculateMaxHeartRate,
         calculateTargetZone,
@@ -191,4 +250,19 @@ if (typeof module !== "undefined" && module.exports) {
         calculateEstimatedHeartRateRange,
         displayCurrentHeartRate
     };
+}
+
+if (typeof require !== "undefined" && require.main === module) {
+    runSelfTests();
+    const port = Number(process.env.PORT) || 8080;
+    const server = createServer();
+
+    server.on("error", (error) => {
+        console.error(`Unable to start web server: ${error.message}`);
+        process.exitCode = 1;
+    });
+
+    server.listen(port, "0.0.0.0", () => {
+        console.log(`Heart Rate Calculator listening on port ${port}`);
+    });
 }

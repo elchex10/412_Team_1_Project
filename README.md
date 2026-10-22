@@ -10,4 +10,14 @@ Team 1's HCDD 412 project is a web-based medical Heart Rate Calculator. The goal
 
 ## Project Summary
 
-The repository contains the starter JavaScript application and an Azure Bicep template for the project's planned hosting environment. The template defines a Linux Azure App Service configured for Node.js 24 LTS with HTTPS-only access. The project is currently in development. The existing `app.js` is a starter example that prints a greeting and demonstrates addition and the heart-rate calculation alongside with the web interface has not yet been implemented.
+The repository contains a Node.js heart rate calculator and an Azure Bicep template for its hosting environment. The template defines a Linux Azure App Service configured for Node.js 24 LTS with HTTPS-only access.
+
+## Run locally
+
+```text
+npm start
+```
+
+The application listens on port `8080` locally, or on the port supplied by Azure through the `PORT` environment variable. Use `/health` to verify that the app is running.
+
+If an App Service was manually stopped, start it in Azure Portal before testing the deployment. A stopped App Service returns HTTP 403 even when the deployment package uploaded successfully.
