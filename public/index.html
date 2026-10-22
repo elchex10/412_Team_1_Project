@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Heart Rate Calculator | HCDD 412</title>
+  <link rel="stylesheet" href="/style.css">
+  <script src="/client.js" defer></script>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <div class="brand">♥ Heart Rate Calculator</div>
+      <span>HCDD 412 | Team 1</span>
+    </header>
+
+    <section class="intro">
+      <p class="eyebrow">HEART RATE ESTIMATES</p>
+      <h1>Understand your heart rate.</h1>
+      <p>Calculate your estimated maximum heart rate and
+         recommended exercise intensity ranges.</p>
+    </section>
+
+    <main class="dashboard">
+      <section class="card">
+        <h2>Enter Your Information</h2>
+        <p class="subtitle">Enter your age to get started.</p>
+
+        <form id="calculator" novalidate>
+          <label for="age">Your Age</label>
+          <input
+            id="age"
+            type="text"
+            inputmode="numeric"
+            placeholder="Enter your age"
+            autocomplete="off"
+          >
+          <p class="hint">Age must be between 1 and 120.</p>
+          <p id="age-error" class="error" role="alert" hidden></p>
+
+          <label for="current">Current Heart Rate (Optional)</label>
+          <input
+            id="current"
+            type="text"
+            inputmode="numeric"
+            placeholder="Enter BPM if known"
+            autocomplete="off"
+          >
+          <p class="hint">Manually enter a reading you've measured.</p>
+          <p id="current-error" class="error" role="alert" hidden></p>
+
+          <div class="buttons">
+            <button type="submit" id="calculate-btn">
+              Calculate
+            </button>
+            <button type="button" id="clear-btn" class="secondary">
+              Clear
+            </button>
+          </div>
+        </form>
+      </section>
+
+      <section class="card">
+        <h2>Your Results</h2>
+        <p class="subtitle">Your estimated heart-rate information.</p>
+
+        <div id="empty-state" class="empty-state">
+          <div class="heart-icon">♡</div>
+          <h3>Ready to calculate?</h3>
+          <p>Enter your age and click Calculate.</p>
+        </div>
+
+        <div id="results" aria-live="polite" hidden>
+          <div class="max-card">
+            <p>Estimated Maximum Heart Rate</p>
+            <div class="maximum">
+              <span id="maximum-value">--</span>
+              <small>BPM</small>
+            </div>
+            <p>Calculated using 220 minus your age.</p>
+          </div>
+
+          <h3>Estimated Exercise Ranges</h3>
+
+          <div class="zone moderate">
+            <div>
+              <strong>Moderate Intensity</strong>
+              <p>50–70% of maximum</p>
+            </div>
+            <strong id="moderate-value">--</strong>
+          </div>
+
+          <div class="zone vigorous">
+            <div>
+              <strong>Vigorous Intensity</strong>
+              <p>70–85% of maximum</p>
+            </div>
+            <strong id="vigorous-value">--</strong>
+          </div>
+
+          <div id="current-reading" class="current-reading" hidden>
+            <span>Manually Entered Current Heart Rate</span>
+            <strong id="current-value">--</strong>
+          </div>
+
+          <p class="disclaimer">
+            These calculations are estimates and are not medical advice.
+          </p>
+        </div>
+
+        <p id="server-error" class="error" role="alert" hidden></p>
+      </section>
+    </main>
+
+    <footer>
+      HCDD 412 — Team 1 | Heart Rate Calculator | Sprint 1
+    </footer>
+  </div>
+</body>
+</html>

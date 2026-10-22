@@ -1,43 +1,129 @@
-
 const http = require("node:http");
-const { processHeartRateInput } = require("./app");
+const path = require("node:path");
+const fs = require("node:fs/promises");
 
-const port = process.env.PORT || 8080;
+const {
+  processHeartRateInput,
+  calculateEstimatedHeartRateRange,
+  displayCurrentHeartRate
+} = require("./app");
 
-const server = http.createServer((req, res) => {
+const PORT = Number(process.env.PORT) || 8080;
+const publicDirectory = path.join(__dirname, "public");
+
+const staticFiles = {
+  "/": ["index.html", "text/html; charset=utf-8"],
+  "/style.css": ["style.css", "text/css; charset=utf-8"],
+  "/client.js": ["client.js", "text/javascript; charset=utf-8"]
+};
+
+function sendResponse(res, status, contentType, body) {
+  res.writeHead(status, {
+    "Content-Type": contentType,
+    "Cache-Control": "no-store",
+    "X-Content-Type-Options": "nosniff"
+  });
+
+  res.end(body);
+}
+
+function sendJSON(res, status, data) {
+  sendResponse(
+    res,
+    status,
+    "application/json; charset=utf-8",
+    JSON.stringify(data)
+  );
+}
+
+function parseRange(range) {
+  const [min, max] = range.split("-").map(Number);
+  return { min, max };
+}
+
+const server = http.createServer(async (req, res) => {
   const url = new URL(req.url, "http://localhost");
 
-  if (url.pathname === "/api/calculate") {
-    const result = processHeartRateInput(url.searchParams.get("age"));
-    res.writeHead(result.error ? 400 : 200, {
-      "Content-Type": "application/json"
+  if (req.method !== "GET") {
+    return sendJSON(res, 405, {
+      error: "Method not allowed."
     });
-    return res.end(JSON.stringify(result));
   }
 
-  res.writeHead(200, { "Content-Type": "text/html; charset=utf-8" });
-  res.end(`
-    <h1>Heart Rate Calculator</h1>
-    <form id="calculator">
-      <label>Age:
-        <input name="age" type="number" min="1" max="120" required>
-      </label>
-      <button>Calculate</button>
-    </form>
-    <p id="result"></p>
-    <script>
-      document.querySelector("#calculator").onsubmit = async (event) => {
-        event.preventDefault();
-        const age = event.target.elements.age.value;
-        const response = await fetch("/api/calculate?age=" + encodeURIComponent(age));
-        const data = await response.json();
-        document.querySelector("#result").textContent =
-          data.error || ("Maximum heart rate: " + data.result + " BPM");
-      };
-    </script>
-  `);
+  // Heart rate calculation API
+  if (url.pathname === "/api/calculate") {
+    const age = url.searchParams.get("age");
+
+    const calculation = processHeartRateInput(age);
+
+    if (calculation.error) {
+      return sendJSON(res, 400, {
+        error: calculation.error,
+        result: null
+      });
+    }
+
+    const current = url.searchParams.get("current");
+    let currentHeartRate = null;
+
+    if (current !== null && current.trim() !== "") {
+      const value = current.trim();
+
+      if (
+        !/^\d+$/.test(value) ||
+        Number(value) < 1 ||
+        Number(value) > 300
+      ) {
+        return sendJSON(res, 400, {
+          error: "Please enter a valid current heart rate between 1 and 300 BPM.",
+          result: null
+        });
+      }
+
+      currentHeartRate = displayCurrentHeartRate(Number(value));
+    }
+
+    const range = calculateEstimatedHeartRateRange(Number(age));
+
+    return sendJSON(res, 200, {
+      error: null,
+      result: calculation.result,
+      moderateZone: parseRange(range.moderateZone),
+      vigorousZone: parseRange(range.vigorousZone),
+      currentHeartRate
+    });
+  }
+
+  // Serve the website files
+  const file = staticFiles[url.pathname];
+
+  if (!file) {
+    return sendResponse(
+      res,
+      404,
+      "text/plain; charset=utf-8",
+      "Page not found"
+    );
+  }
+
+  try {
+    const content = await fs.readFile(
+      path.join(publicDirectory, file[0])
+    );
+
+    sendResponse(res, 200, file[1], content);
+  } catch (error) {
+    console.error("Website error:", error.message);
+
+    sendResponse(
+      res,
+      500,
+      "text/plain; charset=utf-8",
+      "Website file unavailable"
+    );
+  }
 });
 
-server.listen(port, "0.0.0.0", () => {
-  console.log("Heart Rate Calculator listening on port " + port);
+server.listen(PORT, "0.0.0.0", () => {
+  console.log(`Heart Rate Calculator listening on port ${PORT}`);
 });
