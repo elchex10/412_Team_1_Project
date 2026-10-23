@@ -142,9 +142,10 @@ if (typeof document !== "undefined") {
             const { result: mhr } = processHeartRateInput(ageInput.value);
             if (mhr && result) {
                 const zone = calculateTargetZone(mhr);
+                const ranges = calculateEstimatedHeartRateRange(Number(ageInput.value));
                 result.textContent = `Max: ${mhr} bpm | Target: ${zone.min}-${zone.max} bpm`
-                    + ` | Moderate: ${ModerateMin}-${ModerateMax} bpm`
-                    + ` | Vigorous: ${VigorousMin}-${VigorousMax} bpm`;
+                    + ` | Moderate: ${ranges.moderateZone} bpm`
+                    + ` | Vigorous: ${ranges.vigorousZone} bpm`;
             }
         });
     }
