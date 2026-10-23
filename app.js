@@ -149,6 +149,10 @@ if (typeof document !== "undefined") {
     }
 }
 
+// HCDD 412 - Team 1
+// tzp5401 - Sprint 1
+// Issue #10 - Deploy the Application to Azure
+// Create a simple HTTP server to serve the application and handle API requests (Azure Server deployment)
 function createServer() {
     const http = require("node:http");
 
@@ -253,6 +257,10 @@ if (typeof module !== "undefined" && module.exports) {
     };
 }
 
+// HCDD 412 - Team 1
+// tzp5401 - Sprint 1
+// Issue #10 - Deploy the Application to Azure
+// Create and start the server if this script is run directly
 if (typeof require !== "undefined" && require.main === module) {
     runSelfTests();
     const port = Number(process.env.PORT) || 8080;
