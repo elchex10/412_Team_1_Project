@@ -142,7 +142,10 @@ if (typeof document !== "undefined") {
             const { result: mhr } = processHeartRateInput(ageInput.value);
             if (mhr && result) {
                 const zone = calculateTargetZone(mhr);
-                result.textContent = `Max: ${mhr} bpm | Target: ${zone.min}-${zone.max} bpm`;
+                const ranges = calculateEstimatedHeartRateRange(Number(ageInput.value));
+                result.textContent = `Max: ${mhr} bpm | Target: ${zone.min}-${zone.max} bpm`
+                    + ` | Moderate: ${ModerateMin}-${ModerateMax} bpm`
+                    + ` | Vigorous: ${VigorousMin}-${VigorousMax} bpm`;
             }
         });
     }
@@ -195,8 +198,14 @@ function createServer() {
             }
 
             const maximum = 220 - age;
+            const moderateMin = Math.round(maximum * 0.5);
+            const moderateMax = Math.round(maximum * 0.7);
+            const vigorousMin = Math.round(maximum * 0.7);
+            const vigorousMax = Math.round(maximum * 0.85);
             result.textContent = "Max: " + maximum + " bpm | Target: "
-                + Math.round(maximum * 0.5) + "-" + Math.round(maximum * 0.85) + " bpm";
+                + moderateMin + "-" + vigorousMax + " bpm | Moderate: "
+                + moderateMin + "-" + moderateMax + " bpm | Vigorous: "
+                + vigorousMin + "-" + vigorousMax + " bpm";
         });
     </script>
 </body>
