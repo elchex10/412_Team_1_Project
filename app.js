@@ -84,6 +84,7 @@ function calculateTargetZone(maxHeartRate) {
 // HCDD 412 - Team 1
 // tzp5401 - Sprint 1
 // Issue #15 - Validate Required Input Fields
+// Issue #10 - Deploy the Application to Azure
 
 function submitHeartRateCalculation(age) {
     return processHeartRateInput(age);
