@@ -250,6 +250,46 @@ button:disabled {
   margin-top: 25px;
 }
 
+
+
+.history {
+  margin-top: 28px;
+  border-top: 1px solid #e1e8f1;
+  padding-top: 20px;
+}
+
+.history h3 {
+  margin-top: 0;
+}
+
+.history-empty {
+  color: #7c8b9e;
+  font-size: 13px;
+}
+
+#history-list {
+  display: grid;
+  gap: 10px;
+  margin: 0;
+  padding-left: 24px;
+}
+
+#history-list li {
+  padding: 11px 12px;
+  background: #f6f8fc;
+  border-radius: 8px;
+  font-size: 12px;
+}
+
+#history-list li div {
+  display: grid;
+  gap: 4px;
+}
+
+#history-list li span {
+  color: #718096;
+}
+
 footer {
   text-align: center;
   color: #8494a6;

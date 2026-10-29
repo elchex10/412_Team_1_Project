@@ -6,6 +6,16 @@ const results = document.querySelector("#results");
 const emptyState = document.querySelector("#empty-state");
 const serverError = document.querySelector("#server-error");
 const calculateButton = document.querySelector("#calculate-btn");
+const historyList = document.querySelector("#history-list");
+const historyEmptyState = document.querySelector("#history-empty-state");
+const HISTORY_STORAGE_KEY = "heart-rate-calculation-history";
+
+const classificationLabels = {
+  "below-zone": "Below Estimated Exercise Zones",
+  moderate: "Moderate Intensity",
+  vigorous: "Vigorous Intensity",
+  "above-zone": "Above Estimated Exercise Zones"
+};
 
 function showError(input, message) {
   const error = document.querySelector(`#${input.id}-error`);
@@ -32,6 +42,85 @@ function formatBpm(value) {
   }).format(value);
 }
 
+// =================================================
+  // HCDD 412 - Team 1
+  // Timothy Phan (tzp5401) - Sprint 2
+  // Issue #29 - Save Calculation History
+  // Issue #30 - View and Clear Calculation History
+  // =================================================
+
+// Gets the calculation history from local storage. Returns an empty array if no history is found or if an error occurs.
+function getCalculationHistory() {
+  try {
+    const storedHistory = window.localStorage.getItem(HISTORY_STORAGE_KEY);
+
+    if (!storedHistory) {
+      return [];
+    }
+
+    const history = JSON.parse(storedHistory);
+    return Array.isArray(history) ? history : [];
+  } catch (error) {
+    console.error("Unable to load calculation history.", error);
+    return [];
+  }
+}
+
+function renderCalculationHistory() {
+  const history = getCalculationHistory();
+  historyList.replaceChildren();
+  historyEmptyState.hidden = history.length > 0;
+
+  for (const calculation of history) {
+    const item = document.createElement("li");
+    const details = document.createElement("div");
+    const summary = document.createElement("strong");
+    const currentBpm = document.createElement("span");
+    const classification = document.createElement("span");
+
+    summary.textContent = `Age ${calculation.age} — Maximum ${formatBpm(
+      calculation.maximumHeartRate
+    )} BPM`;
+    currentBpm.textContent =
+      calculation.currentBpm === null
+        ? "Current BPM: Not provided"
+        : `Current BPM: ${formatBpm(calculation.currentBpm)}`;
+    classification.textContent = `Classification: ${
+      classificationLabels[calculation.classification] || "Not available"
+    }`;
+
+    details.append(summary, currentBpm, classification);
+    item.append(details);
+    historyList.append(item);
+  }
+}
+
+// Saves a new calculation to local storage and updates the history display.
+function saveCalculationHistory(age, data) {
+  const calculation = {
+    age: Number(age),
+    currentBpm: data.currentHeartRate,
+    maximumHeartRate: data.result,
+    classification: data.classification
+  };
+
+  try {
+    const history = getCalculationHistory();
+    history.push(calculation);
+    window.localStorage.setItem(
+      HISTORY_STORAGE_KEY,
+      JSON.stringify(history)
+    );
+    renderCalculationHistory();
+  } catch (error) {
+    console.error("Unable to save calculation history.", error);
+    serverError.textContent =
+      "Calculation completed, but the result could not be saved locally.";
+    serverError.hidden = false;
+  }
+}
+
+// Displays the results returned from the API in the UI.
 function displayResults(data) {
   document.querySelector("#maximum-value").textContent =
     formatBpm(data.result);
@@ -70,13 +159,6 @@ function displayResults(data) {
     document.querySelector("#classification-feedback");
 
   // Display labels corresponding to the API classifications.
-  const classificationLabels = {
-    "below-zone": "Below Estimated Exercise Zones",
-    "moderate": "Moderate Intensity",
-    "vigorous": "Vigorous Intensity",
-    "above-zone": "Above Estimated Exercise Zones"
-  };
-
   // Only display classification when the API returns a valid value.
   if (
     data.classification &&
@@ -160,6 +242,8 @@ form.addEventListener("submit", async (event) => {
     }
 
     displayResults(data);
+    // Saves the calculation history to local storage after a successful calculation.
+    saveCalculationHistory(age, data);
   } catch (error) {
     serverError.textContent =
       "Unable to connect to the calculator. Please try again.";
@@ -177,3 +261,6 @@ document.querySelector("#clear-btn").addEventListener("click", () => {
   emptyState.hidden = false;
   ageInput.focus();
 });
+
+// Renders the calculation history when the page loads.
+renderCalculationHistory();
