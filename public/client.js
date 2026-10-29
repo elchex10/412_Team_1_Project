@@ -8,6 +8,7 @@ const serverError = document.querySelector("#server-error");
 const calculateButton = document.querySelector("#calculate-btn");
 const historyList = document.querySelector("#history-list");
 const historyEmptyState = document.querySelector("#history-empty-state");
+const clearHistoryButton = document.querySelector("#clear-history-btn");
 const HISTORY_STORAGE_KEY = "heart-rate-calculation-history";
 
 const classificationLabels = {
@@ -46,7 +47,6 @@ function formatBpm(value) {
   // HCDD 412 - Team 1
   // Timothy Phan (tzp5401) - Sprint 2
   // Issue #29 - Save Calculation History
-  // Issue #30 - View and Clear Calculation History
   // =================================================
 
 // Gets the calculation history from local storage. Returns an empty array if no history is found or if an error occurs.
@@ -66,12 +66,39 @@ function getCalculationHistory() {
   }
 }
 
+// Renders the calculation history in the UI.
+// Displays the most recent calculations first, and sorts by timestamp when available.
+// If no history is found, displays an empty state message.
+// Disables the "Clear History" button when no history is available.
 function renderCalculationHistory() {
   const history = getCalculationHistory();
   historyList.replaceChildren();
   historyEmptyState.hidden = history.length > 0;
+  clearHistoryButton.disabled = history.length === 0;
 
-  for (const calculation of history) {
+  // Reverse the stored order so legacy entries saved before timestamps still display newest first. Timestamped entries are sorted when available.
+  const newestFirst = history
+    .map((calculation, index) => ({ calculation, index }))
+    .sort((left, right) => {
+      const leftTime = Number(left.calculation.calculatedAt);
+      const rightTime = Number(right.calculation.calculatedAt);
+
+      if (Number.isFinite(leftTime) && Number.isFinite(rightTime)) {
+        return rightTime - leftTime;
+      }
+
+      if (Number.isFinite(leftTime)) {
+        return -1;
+      }
+
+      if (Number.isFinite(rightTime)) {
+        return 1;
+      }
+
+      return right.index - left.index;
+    });
+
+  for (const { calculation } of newestFirst) {
     const item = document.createElement("li");
     const details = document.createElement("div");
     const summary = document.createElement("strong");
@@ -101,7 +128,8 @@ function saveCalculationHistory(age, data) {
     age: Number(age),
     currentBpm: data.currentHeartRate,
     maximumHeartRate: data.result,
-    classification: data.classification
+    classification: data.classification,
+    calculatedAt: Date.now()
   };
 
   try {
@@ -260,6 +288,25 @@ document.querySelector("#clear-btn").addEventListener("click", () => {
   results.hidden = true;
   emptyState.hidden = false;
   ageInput.focus();
+});
+
+// =================================================
+  // HCDD 412 - Team 1
+  // Timothy Phan (tzp5401) - Sprint 2
+  // Issue #29 - Save Calculation History
+  // =================================================
+
+// Clears the calculation history from local storage and updates the history display.
+clearHistoryButton.addEventListener("click", () => {
+  try {
+    window.localStorage.removeItem(HISTORY_STORAGE_KEY);
+    renderCalculationHistory();
+  } catch (error) {
+    console.error("Unable to clear calculation history.", error);
+    serverError.textContent =
+      "The saved calculation history could not be cleared.";
+    serverError.hidden = false;
+  }
 });
 
 // Renders the calculation history when the page loads.
