@@ -1,8 +1,9 @@
-// Deployment process runner
-// HCDD 412 - Team 1
-// elchex10 - Sprint 1
-// Issue #14 - Establish a Repeatable Deployment Process
-// Issue #13 - Automate Testing with CI
+
+ // Deployment process runner
+ // HCDD 412 - Team 1
+ // elchex10 - Sprint 1
+ // Issue #14 - Establish a Repeatable Deployment Process
+ // Issue #13 - Automate Testing with CI
 
 function deployCalculator(env = "production") {
     try {
@@ -111,16 +112,16 @@ function calculateHeartRateRange(age) {
 // Issue #12 - View Current Heartrate
 
 function calculateEstimatedHeartRateRange(age) {
-    const MaximumHeartRate = 220 - age; 
+    const MaximumHeartRate = 220 - age;
 
-    const ModerateMin = MaximumHeartRate * 0.50; 
-    const ModerateMax = MaximumHeartRate * 0.70; 
+    const ModerateMin = MaximumHeartRate * 0.50;
+    const ModerateMax = MaximumHeartRate * 0.70;
 
-    const VigorousMin = MaximumHeartRate * 0.70; 
-    const VigorousMax = MaximumHeartRate * 0.85; 
+    const VigorousMin = MaximumHeartRate * 0.70;
+    const VigorousMax = MaximumHeartRate * 0.85;
 
     return {
-        MaximumHeartRate, 
+        MaximumHeartRate,
         moderateZone: `${ModerateMin}-${ModerateMax}`,
         vigorousZone: `${VigorousMin}-${VigorousMax}`
     };
@@ -128,6 +129,73 @@ function calculateEstimatedHeartRateRange(age) {
 
 function displayCurrentHeartRate(currentHeartRate) {
     return currentHeartRate;
+}
+
+// =====================================================
+// HCDD 412 - Team 1
+// Giovanni Matos (GMat97) - Sprint 2
+// Issue #26 - Classify Current Heart Rate
+// =====================================================
+
+function classifyCurrentHeartRate(currentBpm, moderateZone, vigorousZone) {
+
+    // Current heart rate is optional.
+    if (currentBpm === null || currentBpm === undefined) {
+        return null;
+    }
+
+    // Validate the current BPM.
+    if (!Number.isFinite(currentBpm) || currentBpm <= 0) {
+        throw new Error("Please enter a valid current heart rate.");
+    }
+
+    // Below the estimated moderate-intensity range.
+    if (currentBpm < moderateZone.min) {
+        return "below-zone";
+    }
+
+    // Moderate intensity: 50% to below 70%.
+    if (currentBpm < vigorousZone.min) {
+        return "moderate";
+    }
+
+    // Vigorous intensity: 70% through 85%.
+    if (currentBpm <= vigorousZone.max) {
+        return "vigorous";
+    }
+
+    // Above the estimated vigorous-intensity range.
+    return "above-zone";
+}
+
+// =====================================================
+// HCDD 412 - Team 1
+// Giovanni Matos (GMat97) - Sprint 2
+// Issue #27 - Generate Heart Rate Feedback
+// =====================================================
+
+function getHeartRateFeedback(classification) {
+
+    const messages = {
+        "below-zone":
+            "Your current heart rate is below the estimated moderate-intensity exercise zone.",
+
+        "moderate":
+            "Your current heart rate is within the estimated moderate-intensity exercise zone.",
+
+        "vigorous":
+            "Your current heart rate is within the estimated vigorous-intensity exercise zone.",
+
+        "above-zone":
+            "Your current heart rate is above the estimated vigorous-intensity exercise zone."
+    };
+
+    // No current BPM means no classification feedback.
+    if (classification === null || classification === undefined) {
+        return null;
+    }
+
+    return messages[classification] || null;
 }
 
 // Browser UI handling
@@ -231,12 +299,14 @@ function runSelfTests() {
 
     assert.equal(processHeartRateInput("25").result, 195);
     assert.equal(processHeartRateInput("").result, null);
+
     // Additional test cases for invalid inputs
     assert.equal(processHeartRateInput("   ").result, null);
     assert.equal(processHeartRateInput(-5).result, null);
     assert.equal(processHeartRateInput("abc").result, null);
     assert.equal(processHeartRateInput(121).result, null);
     assert.equal(processHeartRateInput(25.5).result, null);
+
     // Additional test of the submitHeartRateCalculation function
     assert.equal(submitHeartRateCalculation("").error, "Please enter your age.");
     assert.equal(submitHeartRateCalculation("25").result, 195);
@@ -246,6 +316,73 @@ function runSelfTests() {
     console.log("Current Heart Rate: " + displayCurrentHeartRate(70));
     console.log("Estimated Heart Rate Range:");
     console.log(calculateEstimatedHeartRateRange(20));
+
+    // =================================================
+    // Giovanni Matos - Sprint 2
+    // Issues #26 and #27 - Classification and Feedback
+    // =================================================
+
+    const moderateZone = { min: 100, max: 140 };
+    const vigorousZone = { min: 140, max: 170 };
+
+    // Test classification below the estimated zones.
+    assert.equal(
+        classifyCurrentHeartRate(99, moderateZone, vigorousZone),
+        "below-zone"
+    );
+
+    // Test the lower moderate boundary.
+    assert.equal(
+        classifyCurrentHeartRate(100, moderateZone, vigorousZone),
+        "moderate"
+    );
+
+    // Test moderate classification.
+    assert.equal(
+        classifyCurrentHeartRate(120, moderateZone, vigorousZone),
+        "moderate"
+    );
+
+    // Test the shared 70% boundary.
+    assert.equal(
+        classifyCurrentHeartRate(140, moderateZone, vigorousZone),
+        "vigorous"
+    );
+
+    // Test vigorous classification.
+    assert.equal(
+        classifyCurrentHeartRate(160, moderateZone, vigorousZone),
+        "vigorous"
+    );
+
+    // Test the upper vigorous boundary.
+    assert.equal(
+        classifyCurrentHeartRate(170, moderateZone, vigorousZone),
+        "vigorous"
+    );
+
+    // Test above-zone classification.
+    assert.equal(
+        classifyCurrentHeartRate(171, moderateZone, vigorousZone),
+        "above-zone"
+    );
+
+    // Test optional current heart rate.
+    assert.equal(
+        classifyCurrentHeartRate(null, moderateZone, vigorousZone),
+        null
+    );
+
+    // Test feedback for each classification.
+    assert.ok(getHeartRateFeedback("below-zone"));
+    assert.ok(getHeartRateFeedback("moderate"));
+    assert.ok(getHeartRateFeedback("vigorous"));
+    assert.ok(getHeartRateFeedback("above-zone"));
+
+    // Test that feedback is absent without a classification.
+    assert.equal(getHeartRateFeedback(null), null);
+
+    console.log("All Sprint 2 classification and feedback tests passed!");
 }
 
 // Export for automated CI tests (Node.js)
@@ -261,7 +398,11 @@ if (typeof module !== "undefined" && module.exports) {
         submitHeartRateCalculation,
         calculateHeartRateRange,
         calculateEstimatedHeartRateRange,
-        displayCurrentHeartRate
+        displayCurrentHeartRate,
+
+        // Giovanni Matos - Sprint 2
+        classifyCurrentHeartRate,
+        getHeartRateFeedback
     };
 }
 
