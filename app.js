@@ -198,6 +198,130 @@ function getHeartRateFeedback(classification) {
     return messages[classification] || null;
 }
 
+// =====================================================
+// HCDD 412 - Team 1
+// elchex10 - Sprint 2
+// Issue #28 - Visualize Heart Rate Zones
+// =====================================================
+
+function renderZoneVisualization(maxBpm, currentBpm, moderateBounds, vigorousBounds) {
+    const classification = (currentBpm !== null && currentBpm !== undefined && !isNaN(currentBpm))
+        ? classifyCurrentHeartRate(currentBpm, moderateBounds, vigorousBounds)
+        : null;
+
+    const feedback = getHeartRateFeedback(classification);
+
+    // Compute pointer position percentage across a range [40 bpm to maxBpm]
+    let markerPercent = null;
+    if (currentBpm) {
+        const floor = 40;
+        const ceiling = Math.max(maxBpm + 10, currentBpm + 10);
+        markerPercent = Math.min(100, Math.max(0, Math.round(((currentBpm - floor) / (ceiling - floor)) * 100)));
+    }
+
+    const zones = [
+        {
+            id: "below-zone",
+            label: "Below Moderate",
+            range: `< ${moderateBounds.min} bpm`,
+            active: classification === "below-zone",
+            color: "#6c757d"
+        },
+        {
+            id: "moderate",
+            label: "Moderate Zone (50%-70%)",
+            range: `${moderateBounds.min} - ${moderateBounds.max} bpm`,
+            active: classification === "moderate",
+            color: "#28a745"
+        },
+        {
+            id: "vigorous",
+            label: "Vigorous Zone (70%-85%)",
+            range: `${vigorousBounds.min} - ${vigorousBounds.max} bpm`,
+            active: classification === "vigorous",
+            color: "#fd7e14"
+        },
+        {
+            id: "above-zone",
+            label: "Above Zone (> 85%)",
+            range: `> ${vigorousBounds.max} bpm`,
+            active: classification === "above-zone",
+            color: "#dc3545"
+        }
+    ];
+
+    let zoneCardsHtml = zones.map(z => `
+        <div class="zone-card ${z.active ? 'active-zone' : ''}" style="border-top: 4px solid ${z.color};">
+            <strong class="zone-title">${z.label}</strong>
+            <span class="zone-range">${z.range}</span>
+            ${z.active ? '<span class="status-pill" aria-label="Current zone status: Active">● CURRENT ZONE</span>' : ''}
+        </div>
+    `).join("");
+
+    return `
+        <div class="hr-visualization" role="region" aria-label="Heart Rate Zone Visualization">
+            <h3>Heart Rate Zone Breakdown</h3>
+            <div class="meter-wrapper">
+                <div class="meter-bar" role="progressbar" aria-valuemin="0" aria-valuemax="${maxBpm}" aria-valuenow="${currentBpm || 0}">
+                    <div class="bar-segment seg-below" title="Below Zone"></div>
+                    <div class="bar-segment seg-moderate" title="Moderate Zone"></div>
+                    <div class="bar-segment seg-vigorous" title="Vigorous Zone"></div>
+                    <div class="bar-segment seg-above" title="Above Zone"></div>
+                    ${markerPercent !== null ? `<div class="current-indicator" style="left: ${markerPercent}%;" title="Current BPM: ${currentBpm}">▼ <span class="sr-only">Current BPM: ${currentBpm}</span></div>` : ''}
+                </div>
+            </div>
+            <div class="zone-grid">
+                ${zoneCardsHtml}
+            </div>
+            ${feedback ? `<p class="feedback-text" role="status"><strong>Feedback:</strong> ${feedback}</p>` : ''}
+        </div>
+    `;
+}
+
+// Browser UI handling
+if (typeof document !== "undefined") {
+    const form = document.querySelector("form");
+    if (form) {
+        form.addEventListener("submit", (e) => {
+            e.preventDefault();
+            const ageInput = document.querySelector('input[name="age"]') || document.querySelector("#age");
+            const currentBpmInput = document.querySelector('input[name="currentBpm"]') || document.querySelector("#currentBpm");
+            const result = document.querySelector("#result");
+            const vizContainer = document.querySelector("#visualization") || document.querySelector("#result");
+
+            const { result: mhr, error } = processHeartRateInput(ageInput.value);
+            if (error) {
+                if (result) result.textContent = error;
+                return;
+            }
+
+            if (mhr) {
+                const age = Number(ageInput.value);
+                const currentBpm = (currentBpmInput && currentBpmInput.value) ? Number(currentBpmInput.value) : null;
+                const ranges = calculateEstimatedHeartRateRange(age);
+                const zone = calculateTargetZone(mhr);
+
+                if (result) {
+                    result.textContent = `Max: ${mhr} bpm | Target: ${zone.min}-${zone.max} bpm`
+                        + ` | Moderate: ${ranges.moderateZone} bpm`
+                        + ` | Vigorous: ${ranges.vigorousZone} bpm`;
+                }
+
+                if (vizContainer) {
+                    const vizHtml = renderZoneVisualization(mhr, currentBpm, ranges.moderateBounds, ranges.vigorousBounds);
+                    let vizElem = document.querySelector("#viz-display");
+                    if (!vizElem) {
+                        vizElem = document.createElement("div");
+                        vizElem.id = "viz-display";
+                        vizContainer.insertAdjacentElement("afterend", vizElem);
+                    }
+                    vizElem.innerHTML = vizHtml;
+                }
+            }
+        });
+    }
+}
+
 // Browser UI handling
 if (typeof document !== "undefined") {
     const form = document.querySelector("form");
