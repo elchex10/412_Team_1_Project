@@ -1,3 +1,4 @@
+
 const form = document.querySelector("#calculator");
 const ageInput = document.querySelector("#age");
 const currentInput = document.querySelector("#current");
@@ -52,6 +53,53 @@ function displayResults(data) {
     currentReading.hidden = true;
   }
 
+  // =================================================
+  // HCDD 412 - Team 1
+  // Giovanni Matos (GMat97) - Sprint 2
+  // Issue #26 - Classify Current Heart Rate
+  // Issue #27 - Generate Heart Rate Feedback
+  // =================================================
+
+  const classificationReading =
+    document.querySelector("#classification-reading");
+
+  const classificationValue =
+    document.querySelector("#classification-value");
+
+  const classificationFeedback =
+    document.querySelector("#classification-feedback");
+
+  // Display labels corresponding to the API classifications.
+  const classificationLabels = {
+    "below-zone": "Below Estimated Exercise Zones",
+    "moderate": "Moderate Intensity",
+    "vigorous": "Vigorous Intensity",
+    "above-zone": "Above Estimated Exercise Zones"
+  };
+
+  // Only display classification when the API returns a valid value.
+  if (
+    data.classification &&
+    Object.prototype.hasOwnProperty.call(
+      classificationLabels,
+      data.classification
+    )
+  ) {
+    classificationValue.textContent =
+      classificationLabels[data.classification];
+
+    classificationFeedback.textContent =
+      data.feedback || "";
+
+    classificationReading.hidden = false;
+  } else {
+    // Hide old classification results when no current BPM is entered.
+    classificationValue.textContent = "--";
+    classificationFeedback.textContent = "";
+    classificationReading.hidden = true;
+  }
+
+  // Existing Sprint 1 results display.
   emptyState.hidden = true;
   results.hidden = false;
 }

@@ -1,3 +1,4 @@
+
 const http = require("node:http");
 const path = require("node:path");
 const fs = require("node:fs/promises");
@@ -5,7 +6,12 @@ const fs = require("node:fs/promises");
 const {
   processHeartRateInput,
   calculateEstimatedHeartRateRange,
-  displayCurrentHeartRate
+  displayCurrentHeartRate,
+
+  // Giovanni Matos - Sprint 2
+  // Issues #26 and #27
+  classifyCurrentHeartRate,
+  getHeartRateFeedback
 } = require("./app");
 
 const PORT = Number(process.env.PORT) || 8080;
@@ -85,12 +91,37 @@ const server = http.createServer(async (req, res) => {
 
     const range = calculateEstimatedHeartRateRange(Number(age));
 
+    // =================================================
+    // Giovanni Matos - Sprint 2
+    // Issue #26 - Classify Current Heart Rate
+    // Issue #27 - Generate Heart Rate Feedback
+    // =================================================
+
+    // Convert the existing ranges into numeric objects.
+    const moderateZone = parseRange(range.moderateZone);
+    const vigorousZone = parseRange(range.vigorousZone);
+
+    // Classify the current BPM against the estimated zones.
+    const classification = classifyCurrentHeartRate(
+      currentHeartRate,
+      moderateZone,
+      vigorousZone
+    );
+
+    // Generate feedback based on the classification.
+    const feedback = getHeartRateFeedback(classification);
+
+    // Return the existing results and new Sprint 2 fields.
     return sendJSON(res, 200, {
       error: null,
       result: calculation.result,
-      moderateZone: parseRange(range.moderateZone),
-      vigorousZone: parseRange(range.vigorousZone),
-      currentHeartRate
+      moderateZone,
+      vigorousZone,
+      currentHeartRate,
+
+      // Sprint 2 results
+      classification,
+      feedback
     });
   }
 
