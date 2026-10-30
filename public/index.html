@@ -104,11 +104,9 @@
             <strong id="current-value">--</strong>
           </div>
 
-          <!-- ========================================= -->
-          <!-- Giovanni Matos - Sprint 2                -->
-          <!-- Issue #26 - Classify Current Heart Rate   -->
-          <!-- Issue #27 - Generate Heart Rate Feedback  -->
-          <!-- ========================================= -->
+          <!-- Giovanni Matos - Sprint 2 -->
+          <!-- Issue #26 - Classify Current Heart Rate -->
+          <!-- Issue #27 - Generate Heart Rate Feedback -->
 
           <div
             id="classification-reading"
@@ -116,9 +114,7 @@
             hidden
           >
             <span>Estimated Exercise Classification</span>
-
             <strong id="classification-value">--</strong>
-
             <p id="classification-feedback"></p>
           </div>
 
@@ -129,12 +125,24 @@
 
         <p id="server-error" class="error" role="alert" hidden></p>
 
+        <!-- Sprint 2 - Calculation History -->
         <section class="history" aria-labelledby="history-heading">
           <h3 id="history-heading">Saved Calculation History</h3>
+
           <p id="history-empty-state" class="history-empty">
             Successful calculations will appear here.
           </p>
+
           <ol id="history-list"></ol>
+
+          <button
+            type="button"
+            id="clear-history-btn"
+            class="secondary"
+            disabled
+          >
+            Clear Saved History
+          </button>
         </section>
       </section>
     </main>
