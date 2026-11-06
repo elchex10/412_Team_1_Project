@@ -260,19 +260,6 @@ button:disabled {
   margin-top: 0;
 }
 
-.history-heading {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-}
-
-.history-heading button {
-  margin: 0;
-  padding: 8px 12px;
-  font-size: 12px;
-}
-
 .history-empty {
   color: #7c8b9e;
   font-size: 13px;
