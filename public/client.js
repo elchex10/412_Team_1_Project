@@ -20,6 +20,14 @@ const classificationLabels = {
   "above-zone": "Above Estimated Exercise Zones"
 };
 
+// =================================================
+// Sprint 3 - Issue #36: Copy Heart Rate Results
+// =================================================
+
+const copyResultsButton = document.querySelector("#copy-results-btn");
+const copyStatus = document.querySelector("#copy-status");
+let latestCalculation = null;
+
 function showError(input, message) {
   const error = document.querySelector(`#${input.id}-error`);
   error.textContent = message;
@@ -37,6 +45,7 @@ function clearErrors() {
 
   serverError.textContent = "";
   serverError.hidden = true;
+  copyStatus.textContent = "";
 }
 
 function formatBpm(value) {
@@ -199,6 +208,94 @@ function displayResults(data) {
 }
 
 // =================================================
+// Sprint 3 - Issue #36: Format Results for Copying
+// =================================================
+
+// Convert calculation results into readable text.
+function formatResultsForCopy(age, data) {
+  const lines = [
+    "Heart Rate Calculator Results",
+    `Age: ${age}`,
+    `Estimated Maximum Heart Rate: ${formatBpm(data.result)} BPM`,
+    `Moderate Intensity (50-70%): ${formatBpm(data.moderateZone.min)}-${formatBpm(data.moderateZone.max)} BPM`,
+    `Vigorous Intensity (70-85%): ${formatBpm(data.vigorousZone.min)}-${formatBpm(data.vigorousZone.max)} BPM`
+  ];
+
+  // Include the current heart rate if the user entered one.
+  if (
+    data.currentHeartRate !== null &&
+    data.currentHeartRate !== undefined
+  ) {
+    lines.push(
+      `Current Heart Rate: ${formatBpm(data.currentHeartRate)} BPM`
+    );
+  }
+
+  // Include the classification and feedback when available.
+  if (
+    data.classification &&
+    Object.prototype.hasOwnProperty.call(
+      classificationLabels,
+      data.classification
+    )
+  ) {
+    lines.push(
+      `Classification: ${classificationLabels[data.classification]}`
+    );
+
+    if (data.feedback) {
+      lines.push(`Feedback: ${data.feedback}`);
+    }
+  }
+
+  lines.push(
+    "These calculations are estimates and are not medical advice."
+  );
+
+  return lines.join("\n");
+}
+
+// =================================================
+// Sprint 3 - Issue #36: Copy Results Button
+// =================================================
+
+copyResultsButton.addEventListener("click", async () => {
+  // Prevent copying when no valid calculation is available.
+  if (!latestCalculation || results.hidden) {
+    return;
+  }
+
+  copyStatus.textContent = "";
+
+  // Clipboard access requires HTTPS or a secure local environment.
+  if (
+    !navigator.clipboard ||
+    typeof navigator.clipboard.writeText !== "function"
+  ) {
+    copyStatus.textContent =
+      "Clipboard access is unavailable. Please use HTTPS or localhost.";
+    return;
+  }
+
+  try {
+    const text = formatResultsForCopy(
+      latestCalculation.age,
+      latestCalculation.data
+    );
+
+    // Copy the formatted results to the user's clipboard.
+    await navigator.clipboard.writeText(text);
+
+    // Display confirmation after copying succeeds.
+    copyStatus.textContent = "Results copied to clipboard.";
+  } catch (error) {
+    console.error("Unable to copy results.", error);
+    copyStatus.textContent =
+      "Unable to copy results. Please check clipboard permissions.";
+  }
+});
+
+// =================================================
 // Calculator Form Submission
 // =================================================
 
@@ -209,6 +306,8 @@ form.addEventListener("submit", async (event) => {
   const age = ageInput.value.trim();
   const current = currentInput.value.trim();
 
+  // Clear previous results before starting a new calculation.
+  latestCalculation = null;
   results.hidden = true;
   emptyState.hidden = false;
 
@@ -265,6 +364,11 @@ form.addEventListener("submit", async (event) => {
     }
 
     displayResults(data);
+
+    // Save the latest calculation for the Copy Results button.
+    latestCalculation = { age, data };
+
+    // Keep the existing calculation history functionality.
     saveCalculationHistory(age, data);
   } catch (error) {
     serverError.textContent =
@@ -283,6 +387,10 @@ form.addEventListener("submit", async (event) => {
 document.querySelector("#clear-btn").addEventListener("click", () => {
   form.reset();
   clearErrors();
+
+  // Remove any previously calculated results from the copy feature.
+  latestCalculation = null;
+
   results.hidden = true;
   emptyState.hidden = false;
   ageInput.focus();
