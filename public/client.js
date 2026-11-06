@@ -6,9 +6,11 @@ const results = document.querySelector("#results");
 const emptyState = document.querySelector("#empty-state");
 const serverError = document.querySelector("#server-error");
 const calculateButton = document.querySelector("#calculate-btn");
+
 const historyList = document.querySelector("#history-list");
 const historyEmptyState = document.querySelector("#history-empty-state");
 const clearHistoryButton = document.querySelector("#clear-history-btn");
+
 const HISTORY_STORAGE_KEY = "heart-rate-calculation-history";
 
 const classificationLabels = {
@@ -44,15 +46,14 @@ function formatBpm(value) {
 }
 
 // =================================================
-  // HCDD 412 - Team 1
-  // Timothy Phan (tzp5401) - Sprint 2
-  // Issue #29 - Save Calculation History
-  // =================================================
+// Sprint 2 - Load Saved Calculation History
+// =================================================
 
-// Gets the calculation history from local storage. Returns an empty array if no history is found or if an error occurs.
 function getCalculationHistory() {
   try {
-    const storedHistory = window.localStorage.getItem(HISTORY_STORAGE_KEY);
+    const storedHistory = window.localStorage.getItem(
+      HISTORY_STORAGE_KEY
+    );
 
     if (!storedHistory) {
       return [];
@@ -66,39 +67,18 @@ function getCalculationHistory() {
   }
 }
 
-// Renders the calculation history in the UI.
-// Displays the most recent calculations first, and sorts by timestamp when available.
-// If no history is found, displays an empty state message.
-// Disables the "Clear History" button when no history is available.
+// =================================================
+// Sprint 2 - Display Calculation History
+// =================================================
+
 function renderCalculationHistory() {
   const history = getCalculationHistory();
+
   historyList.replaceChildren();
   historyEmptyState.hidden = history.length > 0;
   clearHistoryButton.disabled = history.length === 0;
 
-  // Reverse the stored order so legacy entries saved before timestamps still display newest first. Timestamped entries are sorted when available.
-  const newestFirst = history
-    .map((calculation, index) => ({ calculation, index }))
-    .sort((left, right) => {
-      const leftTime = Number(left.calculation.calculatedAt);
-      const rightTime = Number(right.calculation.calculatedAt);
-
-      if (Number.isFinite(leftTime) && Number.isFinite(rightTime)) {
-        return rightTime - leftTime;
-      }
-
-      if (Number.isFinite(leftTime)) {
-        return -1;
-      }
-
-      if (Number.isFinite(rightTime)) {
-        return 1;
-      }
-
-      return right.index - left.index;
-    });
-
-  for (const { calculation } of newestFirst) {
+  for (const calculation of history) {
     const item = document.createElement("li");
     const details = document.createElement("div");
     const summary = document.createElement("strong");
@@ -108,10 +88,12 @@ function renderCalculationHistory() {
     summary.textContent = `Age ${calculation.age} — Maximum ${formatBpm(
       calculation.maximumHeartRate
     )} BPM`;
+
     currentBpm.textContent =
       calculation.currentBpm === null
         ? "Current BPM: Not provided"
         : `Current BPM: ${formatBpm(calculation.currentBpm)}`;
+
     classification.textContent = `Classification: ${
       classificationLabels[calculation.classification] || "Not available"
     }`;
@@ -122,23 +104,27 @@ function renderCalculationHistory() {
   }
 }
 
-// Saves a new calculation to local storage and updates the history display.
+// =================================================
+// Sprint 2 - Save Calculation History
+// =================================================
+
 function saveCalculationHistory(age, data) {
   const calculation = {
     age: Number(age),
     currentBpm: data.currentHeartRate,
     maximumHeartRate: data.result,
-    classification: data.classification,
-    calculatedAt: Date.now()
+    classification: data.classification
   };
 
   try {
     const history = getCalculationHistory();
     history.push(calculation);
+
     window.localStorage.setItem(
       HISTORY_STORAGE_KEY,
       JSON.stringify(history)
     );
+
     renderCalculationHistory();
   } catch (error) {
     console.error("Unable to save calculation history.", error);
@@ -148,7 +134,10 @@ function saveCalculationHistory(age, data) {
   }
 }
 
-// Displays the results returned from the API in the UI.
+// =================================================
+// Sprint 2 - Display Results
+// =================================================
+
 function displayResults(data) {
   document.querySelector("#maximum-value").textContent =
     formatBpm(data.result);
@@ -171,7 +160,6 @@ function displayResults(data) {
   }
 
   // =================================================
-  // HCDD 412 - Team 1
   // Giovanni Matos (GMat97) - Sprint 2
   // Issue #26 - Classify Current Heart Rate
   // Issue #27 - Generate Heart Rate Feedback
@@ -186,8 +174,6 @@ function displayResults(data) {
   const classificationFeedback =
     document.querySelector("#classification-feedback");
 
-  // Display labels corresponding to the API classifications.
-  // Only display classification when the API returns a valid value.
   if (
     data.classification &&
     Object.prototype.hasOwnProperty.call(
@@ -203,16 +189,18 @@ function displayResults(data) {
 
     classificationReading.hidden = false;
   } else {
-    // Hide old classification results when no current BPM is entered.
     classificationValue.textContent = "--";
     classificationFeedback.textContent = "";
     classificationReading.hidden = true;
   }
 
-  // Existing Sprint 1 results display.
   emptyState.hidden = true;
   results.hidden = false;
 }
+
+// =================================================
+// Calculator Form Submission
+// =================================================
 
 form.addEventListener("submit", async (event) => {
   event.preventDefault();
@@ -221,7 +209,6 @@ form.addEventListener("submit", async (event) => {
   const age = ageInput.value.trim();
   const current = currentInput.value.trim();
 
-  // Do not leave an old result visible for a new calculation.
   results.hidden = true;
   emptyState.hidden = false;
 
@@ -232,14 +219,19 @@ form.addEventListener("submit", async (event) => {
   }
 
   if (!/^\d+$/.test(age) || Number(age) < 1 || Number(age) > 120) {
-    showError(ageInput, "Please enter a valid age between 1 and 120.");
+    showError(
+      ageInput,
+      "Please enter a valid age between 1 and 120."
+    );
     ageInput.focus();
     return;
   }
 
   if (
     current !== "" &&
-    (!/^\d+$/.test(current) || Number(current) < 1 || Number(current) > 300)
+    (!/^\d+$/.test(current) ||
+      Number(current) < 1 ||
+      Number(current) > 300)
   ) {
     showError(
       currentInput,
@@ -259,7 +251,10 @@ form.addEventListener("submit", async (event) => {
       params.set("current", current);
     }
 
-    const response = await fetch(`/api/calculate?${params.toString()}`);
+    const response = await fetch(
+      `/api/calculate?${params.toString()}`
+    );
+
     const data = await response.json();
 
     if (!response.ok || data.error) {
@@ -270,7 +265,6 @@ form.addEventListener("submit", async (event) => {
     }
 
     displayResults(data);
-    // Saves the calculation history to local storage after a successful calculation.
     saveCalculationHistory(age, data);
   } catch (error) {
     serverError.textContent =
@@ -282,6 +276,10 @@ form.addEventListener("submit", async (event) => {
   }
 });
 
+// =================================================
+// Clear Current Calculator Form
+// =================================================
+
 document.querySelector("#clear-btn").addEventListener("click", () => {
   form.reset();
   clearErrors();
@@ -291,23 +289,29 @@ document.querySelector("#clear-btn").addEventListener("click", () => {
 });
 
 // =================================================
-  // HCDD 412 - Team 1
-  // Timothy Phan (tzp5401) - Sprint 2
-  // Issue #30 - View and Clear Calculation History
-  // =================================================
+// Sprint 2 - Issue #30
+// Clear Saved Calculation History
+// =================================================
 
-// Clears the calculation history from local storage and updates the history display.
 clearHistoryButton.addEventListener("click", () => {
+  const confirmed = window.confirm(
+    "Are you sure you want to delete all saved calculations?"
+  );
+
+  if (!confirmed) {
+    return;
+  }
+
   try {
     window.localStorage.removeItem(HISTORY_STORAGE_KEY);
     renderCalculationHistory();
   } catch (error) {
     console.error("Unable to clear calculation history.", error);
     serverError.textContent =
-      "The saved calculation history could not be cleared.";
+      "Unable to clear saved calculation history.";
     serverError.hidden = false;
   }
 });
 
-// Renders the calculation history when the page loads.
+// Load saved calculations when the page opens.
 renderCalculationHistory();
