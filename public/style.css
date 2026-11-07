@@ -15,6 +15,7 @@
 
 body {
   margin: 0;
+  overflow-x: hidden;
 }
 
 .container {
@@ -217,6 +218,10 @@ button:disabled {
   border-radius: 9px;
 }
 
+.zone > div {
+  min-width: 0;
+}
+
 .zone strong {
   font-size: 14px;
 }
@@ -243,6 +248,17 @@ button:disabled {
   margin-top: 20px;
   border-top: 1px solid #e1e8f1;
   font-size: 13px;
+}
+
+.current-reading > span {
+  min-width: 0;
+}
+
+#classification-feedback {
+  flex-basis: 100%;
+  margin: 0;
+  color: #7c8b9e;
+  line-height: 1.5;
 }
 
 .disclaimer {
@@ -309,6 +325,10 @@ footer {
   .card {
     padding: 22px;
     min-height: auto;
+  }
+
+  .intro {
+    padding: 32px 0 24px;
   }
 
   header > span {
@@ -390,9 +410,91 @@ footer {
 
 /* ==========================================
    Sprint 3 - Mobile Styling
+   Eric Sosa - Improve Mobile Responsiveness
    ========================================== */
 
 @media (max-width: 480px) {
+  .container {
+    width: calc(100% - 24px);
+  }
+
+  header {
+    padding: 18px 0;
+  }
+
+  .brand {
+    font-size: 18px;
+  }
+
+  h1 {
+    font-size: 32px;
+    line-height: 1.15;
+  }
+
+  .card {
+    padding: 18px 16px;
+  }
+
+  .subtitle {
+    margin-bottom: 22px;
+  }
+
+  input {
+    font-size: 16px;
+  }
+
+  .buttons {
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .buttons button,
+  .copy-results button,
+  #clear-history-btn {
+    width: 100%;
+  }
+
+  .zone {
+    align-items: flex-start;
+    padding: 14px;
+  }
+
+  .zone > strong {
+    flex-shrink: 0;
+    text-align: right;
+  }
+
+  .current-reading {
+    flex-wrap: wrap;
+    align-items: flex-start;
+  }
+
+  .current-reading > strong {
+    flex-shrink: 0;
+    text-align: right;
+  }
+
+  #classification-reading {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+  }
+
+  #classification-reading[hidden] {
+    display: none;
+  }
+
+  #history-list {
+    padding-left: 20px;
+  }
+
+  #history-list li {
+    overflow-wrap: anywhere;
+  }
+
+  .maximum {
+    font-size: 48px;
+  }
+
   .how-it-works {
     padding: 15px 16px;
     margin-top: 18px;
