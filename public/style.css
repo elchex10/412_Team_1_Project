@@ -1,3 +1,4 @@
+
 :root {
   font-family: "Segoe UI", Arial, sans-serif;
   color: #1e3550;
@@ -54,7 +55,8 @@ h1 {
   margin: 12px 0;
 }
 
-.intro > p:last-child {
+/* Preserve introduction styling with How It Works added */
+.intro > p:last-of-type {
   color: #64748b;
   line-height: 1.7;
 }
@@ -295,6 +297,10 @@ footer {
   font-size: 12px;
 }
 
+/* ==========================================
+   Existing Responsive Layout
+   ========================================== */
+
 @media (max-width: 760px) {
   .dashboard {
     grid-template-columns: 1fr;
@@ -312,8 +318,7 @@ footer {
   .zone {
     flex-wrap: wrap;
   }
-} 
-
+}
 
 /* ==========================================
    Sprint 3 - Collapsible How It Works Section
@@ -383,6 +388,10 @@ footer {
   color: #7c8b9e;
 }
 
+/* ==========================================
+   Sprint 3 - Mobile Styling
+   ========================================== */
+
 @media (max-width: 480px) {
   .how-it-works {
     padding: 15px 16px;
@@ -401,5 +410,3 @@ footer {
     font-size: 13px;
   }
 }
-
-
