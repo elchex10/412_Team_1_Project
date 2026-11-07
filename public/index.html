@@ -18,8 +18,94 @@
     <section class="intro">
       <p class="eyebrow">HEART RATE ESTIMATES</p>
       <h1>Understand your heart rate.</h1>
-      <p>Calculate your estimated maximum heart rate and
-         recommended exercise intensity ranges.</p>
+      <p>
+        Calculate your estimated maximum heart rate and
+        recommended exercise intensity ranges.
+      </p>
+
+      <!-- Sprint 3 - Collapsible How It Works Section -->
+      <details class="how-it-works">
+        <summary>How It Works</summary>
+
+        <div class="how-it-works-content">
+          <h3>Maximum Heart Rate Calculation</h3>
+          <p>
+            Your estimated maximum heart rate is calculated
+            using 220 minus your age. For example, someone
+            who is 30 years old would have an estimated
+            maximum heart rate of 190 BPM.
+          </p>
+
+          <h3>Exercise Heart Rate Zones</h3>
+          <p>
+            <strong>Moderate Exercise (50–70%):</strong>
+            This range represents moderate-intensity
+            exercise based on your estimated maximum
+            heart rate.
+          </p>
+
+          <p>
+            <strong>Vigorous Exercise (70–85%):</strong>
+            This range represents higher-intensity
+            exercise based on your estimated maximum
+            heart rate.
+          </p>
+
+          <h3>Current Heart Rate</h3>
+          <p>
+            You can optionally enter your current heart
+            rate in beats per minute (BPM). The calculator
+            compares your entered reading with your
+            estimated exercise zones.
+          </p>
+
+          <h3>Heart Rate Classification</h3>
+          <p>
+            Based on the entered heart rate, the calculator
+            can classify your reading as below the
+            estimated exercise zones, moderate intensity,
+            vigorous intensity, or above the estimated
+            exercise zones.
+          </p>
+
+          <h3>Heart Rate Feedback</h3>
+          <p>
+            The calculator provides feedback based on
+            your classification to help explain how
+            your current reading compares with the
+            estimated exercise ranges.
+          </p>
+          <p>
+            This classification is not a medical assessment
+            of whether your heart rate is normal or abnormal.
+          </p>
+
+          <h3>Calculation History</h3>
+          <p>
+            Successful calculations are automatically
+            saved using your browser's local storage.
+            You can view previous calculations in the
+            Saved Calculation History section.
+          </p>
+          <p>
+            To remove saved calculations, click
+            Clear Saved History and confirm the deletion.
+          </p>
+
+          <h3>Copy Results</h3>
+          <p>
+            After completing a calculation, click
+            Copy Results to copy your maximum heart rate,
+            exercise zones, and available classification
+            information to your clipboard.
+          </p>
+
+          <p class="disclaimer">
+            These calculations are estimates and
+            are not medical advice.
+          </p>
+        </div>
+      </details>
     </section>
 
     <main class="dashboard">
@@ -47,7 +133,9 @@
             placeholder="Enter BPM if known"
             autocomplete="off"
           >
-          <p class="hint">Manually enter a reading you've measured.</p>
+          <p class="hint">
+            Manually enter a reading you've measured.
+          </p>
           <p id="current-error" class="error" role="alert" hidden></p>
 
           <div class="buttons">
@@ -63,7 +151,9 @@
 
       <section class="card">
         <h2>Your Results</h2>
-        <p class="subtitle">Your estimated heart-rate information.</p>
+        <p class="subtitle">
+          Your estimated heart-rate information.
+        </p>
 
         <div id="empty-state" class="empty-state">
           <div class="heart-icon">♡</div>
@@ -99,7 +189,11 @@
             <strong id="vigorous-value">--</strong>
           </div>
 
-          <div id="current-reading" class="current-reading" hidden>
+          <div
+            id="current-reading"
+            class="current-reading"
+            hidden
+          >
             <span>Manually Entered Current Heart Rate</span>
             <strong id="current-value">--</strong>
           </div>
@@ -135,17 +229,31 @@
           </div>
 
           <p class="disclaimer">
-            These calculations are estimates and are not medical advice.
+            These calculations are estimates and
+            are not medical advice.
           </p>
         </div>
 
-        <p id="server-error" class="error" role="alert" hidden></p>
+        <p
+          id="server-error"
+          class="error"
+          role="alert"
+          hidden
+        ></p>
 
         <!-- Sprint 2 - Calculation History -->
-        <section class="history" aria-labelledby="history-heading">
-          <h3 id="history-heading">Saved Calculation History</h3>
+        <section
+          class="history"
+          aria-labelledby="history-heading"
+        >
+          <h3 id="history-heading">
+            Saved Calculation History
+          </h3>
 
-          <p id="history-empty-state" class="history-empty">
+          <p
+            id="history-empty-state"
+            class="history-empty"
+          >
             Successful calculations will appear here.
           </p>
 
