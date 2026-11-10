@@ -423,3 +423,264 @@ clearHistoryButton.addEventListener("click", () => {
 
 // Load saved calculations when the page opens.
 renderCalculationHistory();
+
+
+// =================================================
+// Giovanni Matos - Sprint 4: Interactive Heart Rate Dashboard
+// Existing Sprint 1-3 functions remain unchanged.
+// =================================================
+
+const sprint4Insights = (() => {
+  const panel = document.querySelector("#insights-panel");
+
+  if (!panel) {
+    return null;
+  }
+
+  const preview = document.querySelector("#insights-preview");
+  const zoneProgress = document.querySelector("#zone-progress");
+  const zoneMarker = document.querySelector("#zone-marker");
+  const zoneVisualText = document.querySelector("#zone-visual-text");
+  const gaugeVisual = document.querySelector("#gauge-visual");
+  const gaugeRing = document.querySelector("#bpm-gauge");
+  const gaugeCurrent = document.querySelector("#gauge-current");
+  const gaugePercent = document.querySelector("#gauge-percent");
+  const gaugeCaption = document.querySelector("#gauge-caption");
+
+  const prefersReducedMotion = window.matchMedia(
+    "(prefers-reduced-motion: reduce)"
+  );
+
+  const colors = {
+    "below-zone": "#627eaa",
+    moderate: "#319b81",
+    vigorous: "#3d75b3",
+    "above-zone": "#d7617c"
+  };
+
+  let displayedData = null;
+  let activeFrame = null;
+
+  function stopAnimation() {
+    if (activeFrame !== null) {
+      window.cancelAnimationFrame(activeFrame);
+      activeFrame = null;
+    }
+  }
+
+  function resetVisualInsights() {
+    stopAnimation();
+    displayedData = null;
+
+    zoneMarker.hidden = true;
+    zoneProgress.hidden = true;
+
+    zoneMarker.style.left = "0%";
+    zoneProgress.style.width = "0%";
+
+    zoneVisualText.textContent =
+      "Enter a current heart rate to see its position on the zone bar.";
+
+    gaugeVisual.hidden = true;
+
+    gaugeRing.style.setProperty("--sprint4-percent", "0");
+
+    gaugeCurrent.textContent = "0";
+    gaugePercent.textContent = "0% of max";
+    gaugeCaption.textContent = "";
+
+    preview.textContent = "Explore your exercise zones";
+  }
+
+  function drawInsights() {
+    stopAnimation();
+
+    if (!displayedData) {
+      return;
+    }
+
+    const data = displayedData;
+    const max = Number(data.result);
+    const bpm = data.currentHeartRate;
+
+    const moderate =
+      `${formatBpm(data.moderateZone.min)}–` +
+      `${formatBpm(data.moderateZone.max)} BPM`;
+
+    const vigorous =
+      `${formatBpm(data.vigorousZone.min)}–` +
+      `${formatBpm(data.vigorousZone.max)} BPM`;
+
+    if (
+      bpm === null ||
+      bpm === undefined ||
+      bpm === "" ||
+      !Number.isFinite(Number(bpm)) ||
+      !Number.isFinite(max) ||
+      max <= 0
+    ) {
+      zoneMarker.hidden = true;
+      zoneProgress.hidden = true;
+      gaugeVisual.hidden = true;
+
+      zoneVisualText.textContent =
+        `Moderate: ${moderate}. Vigorous: ${vigorous}. ` +
+        "Enter a measured current BPM to see the animated indicator and gauge.";
+
+      preview.textContent = "Enter current BPM to view your gauge";
+      return;
+    }
+
+    const current = Number(bpm);
+    const actualPercent = (current / max) * 100;
+
+    const cappedPercent = Math.max(
+      0,
+      Math.min(actualPercent, 100)
+    );
+
+    const color =
+      colors[data.classification] || "#4176a5";
+
+    const label =
+      classificationLabels[data.classification] ||
+      "Classification unavailable";
+
+    preview.textContent =
+      `${formatBpm(current)} BPM · ` +
+      `${formatBpm(actualPercent)}% of max`;
+
+    zoneVisualText.textContent =
+      `${formatBpm(current)} BPM ` +
+      `(${formatBpm(actualPercent)}% of estimated maximum). ` +
+      `${label}. Moderate: ${moderate}. Vigorous: ${vigorous}.`;
+
+    gaugeCaption.textContent =
+      actualPercent > 100
+        ? "The reading exceeds the estimated maximum. The display is capped at 100%."
+        : "Your measured BPM relative to the estimated maximum; not a health score.";
+
+    gaugeRing.setAttribute(
+      "aria-label",
+      `${formatBpm(current)} BPM, ` +
+      `${formatBpm(actualPercent)} percent of estimated maximum`
+    );
+
+    zoneMarker.hidden = false;
+    zoneProgress.hidden = false;
+    gaugeVisual.hidden = false;
+
+    zoneMarker.style.setProperty(
+      "--sprint4-marker-color",
+      color
+    );
+
+    gaugeRing.style.setProperty(
+      "--sprint4-color",
+      color
+    );
+
+    function update(progress) {
+      const value = cappedPercent * progress;
+
+      zoneMarker.style.left = `${value}%`;
+      zoneProgress.style.width = `${value}%`;
+
+      gaugeRing.style.setProperty(
+        "--sprint4-percent",
+        String(value)
+      );
+
+      gaugeCurrent.textContent = formatBpm(
+        Math.round(current * progress)
+      );
+
+      gaugePercent.textContent =
+        `${formatBpm(actualPercent * progress)}% of max`;
+    }
+
+    update(0);
+
+    if (prefersReducedMotion.matches) {
+      update(1);
+      return;
+    }
+
+    let startedAt = null;
+
+    function frame(now) {
+      if (startedAt === null) {
+        startedAt = now;
+      }
+
+      const elapsed = Math.min(
+        (now - startedAt) / 850,
+        1
+      );
+
+      const eased =
+        1 - Math.pow(1 - elapsed, 3);
+
+      update(eased);
+
+      if (elapsed < 1) {
+        activeFrame = window.requestAnimationFrame(frame);
+      } else {
+        activeFrame = null;
+        update(1);
+      }
+    }
+
+    activeFrame = window.requestAnimationFrame(frame);
+  }
+
+  // Observe the existing calculation results.
+  // No changes to displayResults() are necessary.
+
+  const resultsObserver = new MutationObserver(() => {
+    if (results.hidden) {
+      resetVisualInsights();
+      return;
+    }
+
+    if (latestCalculation && latestCalculation.data) {
+      displayedData = latestCalculation.data;
+
+      if (panel.open) {
+        drawInsights();
+      } else {
+        preview.textContent =
+          "Open to explore your results";
+      }
+    }
+  });
+
+  resultsObserver.observe(results, {
+    attributes: true,
+    attributeFilter: ["hidden"]
+  });
+
+  // Reopen the panel to replay animations.
+  panel.addEventListener("toggle", () => {
+    if (!panel.open) {
+      stopAnimation();
+      return;
+    }
+
+    if (
+      !results.hidden &&
+      latestCalculation &&
+      latestCalculation.data
+    ) {
+      displayedData = latestCalculation.data;
+      drawInsights();
+    }
+  });
+
+  resetVisualInsights();
+
+  return {
+    resetVisualInsights,
+    drawInsights
+  };
+})();

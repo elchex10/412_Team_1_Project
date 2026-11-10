@@ -171,6 +171,78 @@
             <p>Calculated using 220 minus your age.</p>
           </div>
 
+          <!-- Giovanni Matos - Sprint 4: Interactive Heart Rate Dashboard -->
+          <details id="insights-panel" class="insights-panel">
+            <summary class="insights-toggle">
+              <span class="sprint4-heart" aria-hidden="true">♥</span>
+              <span class="insights-heading">
+                <strong>Interactive Heart Rate Insights</strong>
+                <small id="insights-preview">Explore your exercise zones</small>
+              </span>
+              <span class="insights-chevron" aria-hidden="true">⌄</span>
+            </summary>
+
+            <div class="insights-content">
+              <section class="insights-visual-card" aria-labelledby="zone-visual-title">
+                <h4 id="zone-visual-title">Heart Rate Zone Indicator</h4>
+                <p class="insights-subtitle">
+                  Current BPM compared with estimated maximum heart rate.
+                </p>
+
+                <div class="zone-scale-labels" aria-hidden="true">
+                  <span>0%</span>
+                  <span>50%</span>
+                  <span>70%</span>
+                  <span>85%</span>
+                  <span>100%</span>
+                </div>
+
+                <div class="zone-bar" aria-hidden="true">
+                  <span class="zone-segment zone-below"></span>
+                  <span class="zone-segment zone-moderate"></span>
+                  <span class="zone-segment zone-vigorous"></span>
+                  <span class="zone-segment zone-above"></span>
+                  <span id="zone-progress" class="zone-progress" hidden></span>
+                  <span id="zone-marker" class="zone-marker" hidden></span>
+                </div>
+
+                <p id="zone-visual-text" class="insights-note">
+                  Enter a current heart rate to see its position on the zone bar.
+                </p>
+              </section>
+
+              <section
+                id="gauge-visual"
+                class="insights-visual-card"
+                aria-labelledby="gauge-visual-title"
+                hidden
+              >
+                <h4 id="gauge-visual-title">Current BPM Gauge</h4>
+                <p class="insights-subtitle">
+                  Animated comparison to estimated maximum.
+                </p>
+
+                <div
+                  id="bpm-gauge"
+                  class="gauge-ring"
+                  role="img"
+                  aria-label="Current BPM gauge"
+                >
+                  <div class="gauge-center" aria-hidden="true">
+                    <span id="gauge-current">0</span>
+                    <small>BPM</small>
+                    <span id="gauge-percent">0% of max</span>
+                  </div>
+                </div>
+
+                <p id="gauge-caption" class="insights-note"></p>
+              </section>
+
+              <p class="insights-disclaimer">
+                These are exercise estimates, not medical advice or a health score.
+              </p>
+            </div>
+          </details>
           <h3>Estimated Exercise Ranges</h3>
 
           <div class="zone moderate">
