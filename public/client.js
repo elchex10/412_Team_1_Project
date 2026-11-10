@@ -40,6 +40,7 @@ function clearErrors() {
     const error = document.querySelector(`#${input.id}-error`);
     error.textContent = "";
     error.hidden = true;
+    input.setAttribute("aria-invalid", "false");
     input.removeAttribute("aria-invalid");
   }
 
@@ -286,7 +287,6 @@ copyResultsButton.addEventListener("click", async () => {
     // Copy the formatted results to the user's clipboard.
     await navigator.clipboard.writeText(text);
 
-    // Display confirmation after copying succeeds.
     copyStatus.textContent = "Results copied to clipboard.";
   } catch (error) {
     console.error("Unable to copy results.", error);
@@ -424,263 +424,314 @@ clearHistoryButton.addEventListener("click", () => {
 // Load saved calculations when the page opens.
 renderCalculationHistory();
 
-
 // =================================================
-// Giovanni Matos - Sprint 4: Interactive Heart Rate Dashboard
-// Existing Sprint 1-3 functions remain unchanged.
+// Giovanni Matos - Sprint 4: Animated Heart Rate Dashboard
+// Additive UI only. No existing calculations are changed.
 // =================================================
 
-const sprint4Insights = (() => {
-  const panel = document.querySelector("#insights-panel");
+(() => {
+  const panel = document.querySelector("#s4-panel");
+  if (!panel) return;
 
-  if (!panel) {
-    return null;
-  }
+  const heart = document.querySelector("#s4-heart");
+  const preview = document.querySelector("#s4-preview");
+  const bpmValue = document.querySelector("#s4-bpm");
+  const intensity = document.querySelector("#s4-intensity");
+  const percentValue = document.querySelector("#s4-percent");
+  const status = document.querySelector("#s4-energy-status");
+  const meter = document.querySelector(".s4-meter");
+  const fill = document.querySelector("#s4-fill");
+  const pointer = document.querySelector("#s4-pointer");
+  const burst = document.querySelector("#s4-burst");
+  const note = document.querySelector("#s4-bar-note");
+  const chips = document.querySelectorAll(".s4-zone-chip");
 
-  const preview = document.querySelector("#insights-preview");
-  const zoneProgress = document.querySelector("#zone-progress");
-  const zoneMarker = document.querySelector("#zone-marker");
-  const zoneVisualText = document.querySelector("#zone-visual-text");
-  const gaugeVisual = document.querySelector("#gauge-visual");
-  const gaugeRing = document.querySelector("#bpm-gauge");
-  const gaugeCurrent = document.querySelector("#gauge-current");
-  const gaugePercent = document.querySelector("#gauge-percent");
-  const gaugeCaption = document.querySelector("#gauge-caption");
-
-  const prefersReducedMotion = window.matchMedia(
+  const reducedMotion = window.matchMedia(
     "(prefers-reduced-motion: reduce)"
   );
 
-  const colors = {
+  let lastData = null;
+  let frameId = null;
+
+  const zoneColors = {
     "below-zone": "#627eaa",
     moderate: "#319b81",
     vigorous: "#3d75b3",
     "above-zone": "#d7617c"
   };
 
-  let displayedData = null;
-  let activeFrame = null;
-
-  function stopAnimation() {
-    if (activeFrame !== null) {
-      window.cancelAnimationFrame(activeFrame);
-      activeFrame = null;
-    }
-  }
-
-  function resetVisualInsights() {
-    stopAnimation();
-    displayedData = null;
-
-    zoneMarker.hidden = true;
-    zoneProgress.hidden = true;
-
-    zoneMarker.style.left = "0%";
-    zoneProgress.style.width = "0%";
-
-    zoneVisualText.textContent =
-      "Enter a current heart rate to see its position on the zone bar.";
-
-    gaugeVisual.hidden = true;
-
-    gaugeRing.style.setProperty("--sprint4-percent", "0");
-
-    gaugeCurrent.textContent = "0";
-    gaugePercent.textContent = "0% of max";
-    gaugeCaption.textContent = "";
-
-    preview.textContent = "Explore your exercise zones";
-  }
-
-  function drawInsights() {
-    stopAnimation();
-
-    if (!displayedData) {
-      return;
+  function cancelAnimation() {
+    if (frameId !== null) {
+      window.cancelAnimationFrame(frameId);
     }
 
-    const data = displayedData;
+    frameId = null;
+    burst.classList.remove("s4-burst-on");
+  }
+
+  function resetDashboard() {
+    cancelAnimation();
+    lastData = null;
+
+    panel.style.setProperty("--s4-beat", "1.2s");
+
+    preview.textContent = "Explore your animated exercise zones";
+    bpmValue.textContent = "--";
+    intensity.textContent = "Your exercise intensity";
+    percentValue.textContent = "Enter a current BPM to start";
+    status.textContent = "Ready";
+
+    fill.style.width = "0%";
+    pointer.hidden = true;
+
+    note.textContent =
+      "Enter a measured heart rate to see the bar fill.";
+
+    chips.forEach(chip => {
+      chip.classList.remove("s4-active");
+    });
+
+    meter.setAttribute(
+      "aria-label",
+      "No heart rate entered"
+    );
+  }
+
+  function setDashboardData(data) {
+    cancelAnimation();
+    lastData = data;
+
     const max = Number(data.result);
-    const bpm = data.currentHeartRate;
-
-    const moderate =
-      `${formatBpm(data.moderateZone.min)}–` +
-      `${formatBpm(data.moderateZone.max)} BPM`;
-
-    const vigorous =
-      `${formatBpm(data.vigorousZone.min)}–` +
-      `${formatBpm(data.vigorousZone.max)} BPM`;
+    const current = data.currentHeartRate;
+    const bpm = Number(current);
 
     if (
-      bpm === null ||
-      bpm === undefined ||
-      bpm === "" ||
-      !Number.isFinite(Number(bpm)) ||
+      current === null ||
+      current === undefined ||
+      current === "" ||
+      !Number.isFinite(bpm) ||
       !Number.isFinite(max) ||
       max <= 0
     ) {
-      zoneMarker.hidden = true;
-      zoneProgress.hidden = true;
-      gaugeVisual.hidden = true;
+      bpmValue.textContent = "--";
+      intensity.textContent = "Estimated exercise zones";
+      percentValue.textContent = "No current BPM provided";
+      status.textContent = "Waiting for BPM";
 
-      zoneVisualText.textContent =
-        `Moderate: ${moderate}. Vigorous: ${vigorous}. ` +
-        "Enter a measured current BPM to see the animated indicator and gauge.";
+      preview.textContent =
+        "Enter your current BPM to animate the gauge";
 
-      preview.textContent = "Enter current BPM to view your gauge";
+      pointer.hidden = true;
+      fill.style.width = "0%";
+
+      chips.forEach(chip => {
+        chip.classList.remove("s4-active");
+      });
+
+      note.textContent =
+        "Moderate: " +
+        formatBpm(data.moderateZone.min) +
+        "–" +
+        formatBpm(data.moderateZone.max) +
+        " BPM. Vigorous: " +
+        formatBpm(data.vigorousZone.min) +
+        "–" +
+        formatBpm(data.vigorousZone.max) +
+        " BPM.";
+
       return;
     }
 
-    const current = Number(bpm);
-    const actualPercent = (current / max) * 100;
-
-    const cappedPercent = Math.max(
-      0,
-      Math.min(actualPercent, 100)
-    );
-
-    const color =
-      colors[data.classification] || "#4176a5";
+    const percent = (bpm / max) * 100;
 
     const label =
       classificationLabels[data.classification] ||
-      "Classification unavailable";
+      "Estimated Exercise Intensity";
+
+    const color =
+      zoneColors[data.classification] || "#3d75b3";
+
+    // A higher entered BPM makes the heart beat faster.
+    const beatSeconds = Math.max(
+      0.42,
+      Math.min(1.7, 60 / bpm)
+    );
+
+    panel.style.setProperty(
+      "--s4-beat",
+      beatSeconds.toFixed(2) + "s"
+    );
+
+    panel.style.setProperty("--s4-accent", color);
 
     preview.textContent =
-      `${formatBpm(current)} BPM · ` +
-      `${formatBpm(actualPercent)}% of max`;
+      formatBpm(bpm) +
+      " BPM · " +
+      formatBpm(percent) +
+      "% of max";
 
-    zoneVisualText.textContent =
-      `${formatBpm(current)} BPM ` +
-      `(${formatBpm(actualPercent)}% of estimated maximum). ` +
-      `${label}. Moderate: ${moderate}. Vigorous: ${vigorous}.`;
+    intensity.textContent = label;
 
-    gaugeCaption.textContent =
-      actualPercent > 100
-        ? "The reading exceeds the estimated maximum. The display is capped at 100%."
-        : "Your measured BPM relative to the estimated maximum; not a health score.";
+    percentValue.textContent =
+      formatBpm(percent) + "% of estimated maximum";
 
-    gaugeRing.setAttribute(
+    status.textContent = label;
+
+    note.textContent =
+      percent > 100
+        ? "Above 100% of estimated maximum; the visual bar stops at 100%."
+        : "Animated fill represents your entered BPM as a percentage of estimated maximum.";
+
+    meter.setAttribute(
       "aria-label",
-      `${formatBpm(current)} BPM, ` +
-      `${formatBpm(actualPercent)} percent of estimated maximum`
+      formatBpm(bpm) +
+      " BPM, " +
+      formatBpm(percent) +
+      "% of estimated maximum; " +
+      label
     );
 
-    zoneMarker.hidden = false;
-    zoneProgress.hidden = false;
-    gaugeVisual.hidden = false;
+    chips.forEach(chip => {
+      chip.classList.toggle(
+        "s4-active",
+        chip.dataset.s4Zone === data.classification
+      );
+    });
 
-    zoneMarker.style.setProperty(
-      "--sprint4-marker-color",
-      color
+    if (panel.open) {
+      playDashboard(bpm, percent);
+    }
+  }
+
+  function playDashboard(bpm, percent) {
+    cancelAnimation();
+
+    const limited = Math.max(
+      0,
+      Math.min(100, percent)
     );
 
-    gaugeRing.style.setProperty(
-      "--sprint4-color",
-      color
-    );
+    // Higher exercise intensity = faster fill animation.
+    const duration =
+      percent >= 85
+        ? 850
+        : percent >= 70
+          ? 1050
+          : percent >= 50
+            ? 1400
+            : 1750;
 
-    function update(progress) {
-      const value = cappedPercent * progress;
+    const thresholds = [50, 70, 85];
+    const crossed = new Set();
 
-      zoneMarker.style.left = `${value}%`;
-      zoneProgress.style.width = `${value}%`;
+    let startedAt = null;
+    pointer.hidden = false;
 
-      gaugeRing.style.setProperty(
-        "--sprint4-percent",
-        String(value)
+    function draw(progress) {
+      const position = limited * progress;
+
+      bpmValue.textContent = formatBpm(
+        Math.round(bpm * progress)
       );
 
-      gaugeCurrent.textContent = formatBpm(
-        Math.round(current * progress)
-      );
+      fill.style.width = position + "%";
+      pointer.style.left = position + "%";
 
-      gaugePercent.textContent =
-        `${formatBpm(actualPercent * progress)}% of max`;
+      if (!reducedMotion.matches) {
+        for (const mark of thresholds) {
+          if (position >= mark && !crossed.has(mark)) {
+            crossed.add(mark);
+
+            burst.style.left = mark + "%";
+            burst.classList.remove("s4-burst-on");
+
+            // Restart the particle burst animation.
+            void burst.offsetWidth;
+
+            burst.classList.add("s4-burst-on");
+          }
+        }
+      }
     }
 
-    update(0);
-
-    if (prefersReducedMotion.matches) {
-      update(1);
+    if (reducedMotion.matches) {
+      draw(1);
       return;
     }
 
-    let startedAt = null;
+    draw(0);
 
-    function frame(now) {
+    function tick(now) {
       if (startedAt === null) {
         startedAt = now;
       }
 
-      const elapsed = Math.min(
-        (now - startedAt) / 850,
+      const progress = Math.min(
+        (now - startedAt) / duration,
         1
       );
 
-      const eased =
-        1 - Math.pow(1 - elapsed, 3);
+      const easing =
+        1 - Math.pow(1 - progress, 3);
 
-      update(eased);
+      draw(easing);
 
-      if (elapsed < 1) {
-        activeFrame = window.requestAnimationFrame(frame);
+      if (progress < 1) {
+        frameId = window.requestAnimationFrame(tick);
       } else {
-        activeFrame = null;
-        update(1);
+        frameId = null;
+        draw(1);
       }
     }
 
-    activeFrame = window.requestAnimationFrame(frame);
+    frameId = window.requestAnimationFrame(tick);
   }
 
-  // Observe the existing calculation results.
-  // No changes to displayResults() are necessary.
-
-  const resultsObserver = new MutationObserver(() => {
+  // Observe existing results without modifying displayResults().
+  const observer = new MutationObserver(() => {
     if (results.hidden) {
-      resetVisualInsights();
-      return;
-    }
-
-    if (latestCalculation && latestCalculation.data) {
-      displayedData = latestCalculation.data;
-
-      if (panel.open) {
-        drawInsights();
-      } else {
-        preview.textContent =
-          "Open to explore your results";
-      }
+      resetDashboard();
+    } else if (latestCalculation && latestCalculation.data) {
+      setDashboardData(latestCalculation.data);
     }
   });
 
-  resultsObserver.observe(results, {
+  observer.observe(results, {
     attributes: true,
     attributeFilter: ["hidden"]
   });
 
-  // Reopen the panel to replay animations.
+  // Reopen the panel to replay the gauge animation.
   panel.addEventListener("toggle", () => {
     if (!panel.open) {
-      stopAnimation();
-      return;
-    }
-
-    if (
-      !results.hidden &&
-      latestCalculation &&
-      latestCalculation.data
-    ) {
-      displayedData = latestCalculation.data;
-      drawInsights();
+      cancelAnimation();
+    } else if (lastData) {
+      setDashboardData(lastData);
     }
   });
 
-  resetVisualInsights();
+  resetDashboard();
+})();
 
-  return {
-    resetVisualInsights,
-    drawInsights
-  };
+// =================================================
+// Sprint 4 UI refinement - Saved History Count
+// Keeps the existing Sprint 2 history functions unchanged.
+// =================================================
+
+(() => {
+  const historyCount = document.querySelector("#history-count");
+  if (!historyCount) return;
+
+  function updateHistoryCount() {
+    const count = historyList.children.length;
+    historyCount.textContent = `(${count})`;
+  }
+
+  // Existing renderCalculationHistory() updates the same history list.
+  // Observe its entries instead of modifying a teammate's function.
+  new MutationObserver(updateHistoryCount).observe(historyList, {
+    childList: true
+  });
+
+  updateHistoryCount();
 })();

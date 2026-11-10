@@ -171,25 +171,41 @@
             <p>Calculated using 220 minus your age.</p>
           </div>
 
-          <!-- Giovanni Matos - Sprint 4: Interactive Heart Rate Dashboard -->
-          <details id="insights-panel" class="insights-panel">
-            <summary class="insights-toggle">
-              <span class="sprint4-heart" aria-hidden="true">♥</span>
-              <span class="insights-heading">
-                <strong>Interactive Heart Rate Insights</strong>
-                <small id="insights-preview">Explore your exercise zones</small>
+          <!-- Giovanni Matos - Sprint 4: Animated Heart Rate Dashboard -->
+          <details id="s4-panel" class="s4-panel">
+            <summary class="s4-summary">
+              <span id="s4-heart" class="s4-heart" aria-hidden="true">
+                <svg viewBox="0 0 100 100" focusable="false">
+                  <path class="s4-heart-shape" d="M50 90 C21 70 8 53 9 33 C10 11 36 8 50 27 C64 8 90 11 91 33 C92 53 79 70 50 90 Z"></path>
+                  <path class="s4-heart-ecg" d="M5 52 H34 L42 40 L49 66 L57 27 L65 52 H95"></path>
+                </svg>
               </span>
-              <span class="insights-chevron" aria-hidden="true">⌄</span>
+              <span class="s4-summary-label">
+                <strong>Interactive Heart Rate Insights</strong>
+                <small id="s4-preview">Explore your animated exercise zones</small>
+              </span>
+              <span class="s4-chevron" aria-hidden="true">⌄</span>
             </summary>
 
-            <div class="insights-content">
-              <section class="insights-visual-card" aria-labelledby="zone-visual-title">
-                <h4 id="zone-visual-title">Heart Rate Zone Indicator</h4>
-                <p class="insights-subtitle">
-                  Current BPM compared with estimated maximum heart rate.
-                </p>
+            <div class="s4-body">
+              <div class="s4-stat-row">
+                <div class="s4-number">
+                  <span id="s4-bpm">--</span>
+                  <small>BPM</small>
+                </div>
+                <div class="s4-stat-detail">
+                  <strong id="s4-intensity">Your exercise intensity</strong>
+                  <span id="s4-percent">Enter a current BPM to start</span>
+                </div>
+              </div>
 
-                <div class="zone-scale-labels" aria-hidden="true">
+              <section class="s4-energy-card" aria-label="Animated exercise intensity gauge">
+                <div class="s4-energy-head">
+                  <strong>Heart Rate Power Bar</strong>
+                  <span id="s4-energy-status">Ready</span>
+                </div>
+
+                <div class="s4-scale" aria-hidden="true">
                   <span>0%</span>
                   <span>50%</span>
                   <span>70%</span>
@@ -197,52 +213,56 @@
                   <span>100%</span>
                 </div>
 
-                <div class="zone-bar" aria-hidden="true">
-                  <span class="zone-segment zone-below"></span>
-                  <span class="zone-segment zone-moderate"></span>
-                  <span class="zone-segment zone-vigorous"></span>
-                  <span class="zone-segment zone-above"></span>
-                  <span id="zone-progress" class="zone-progress" hidden></span>
-                  <span id="zone-marker" class="zone-marker" hidden></span>
+                <div class="s4-meter" role="img" aria-label="No heart rate entered">
+                  <span class="s4-track s4-track-low"></span>
+                  <span class="s4-track s4-track-moderate"></span>
+                  <span class="s4-track s4-track-vigorous"></span>
+                  <span class="s4-track s4-track-high"></span>
+                  <span id="s4-fill" class="s4-fill">
+                    <span class="s4-sheen"></span>
+                  </span>
+                  <span id="s4-pointer" class="s4-pointer" hidden></span>
+                  <span id="s4-burst" class="s4-burst" aria-hidden="true">
+                    <i></i><i></i><i></i><i></i>
+                    <i></i><i></i><i></i><i></i>
+                  </span>
                 </div>
 
-                <p id="zone-visual-text" class="insights-note">
-                  Enter a current heart rate to see its position on the zone bar.
+                <p id="s4-bar-note" class="s4-bar-note">
+                  Enter a measured heart rate to see the bar fill.
                 </p>
               </section>
 
-              <section
-                id="gauge-visual"
-                class="insights-visual-card"
-                aria-labelledby="gauge-visual-title"
-                hidden
-              >
-                <h4 id="gauge-visual-title">Current BPM Gauge</h4>
-                <p class="insights-subtitle">
-                  Animated comparison to estimated maximum.
-                </p>
-
-                <div
-                  id="bpm-gauge"
-                  class="gauge-ring"
-                  role="img"
-                  aria-label="Current BPM gauge"
-                >
-                  <div class="gauge-center" aria-hidden="true">
-                    <span id="gauge-current">0</span>
-                    <small>BPM</small>
-                    <span id="gauge-percent">0% of max</span>
-                  </div>
+              <div class="s4-zone-cards" aria-label="Heart rate intensity scale">
+                <div class="s4-zone-chip" data-s4-zone="below-zone">
+                  <span class="s4-chip-dot"></span>
+                  <strong>Below Zone</strong>
+                  <small>Under 50%</small>
                 </div>
+                <div class="s4-zone-chip" data-s4-zone="moderate">
+                  <span class="s4-chip-dot"></span>
+                  <strong>Moderate</strong>
+                  <small>50–70%</small>
+                </div>
+                <div class="s4-zone-chip" data-s4-zone="vigorous">
+                  <span class="s4-chip-dot"></span>
+                  <strong>Vigorous</strong>
+                  <small>70–85%</small>
+                </div>
+                <div class="s4-zone-chip" data-s4-zone="above-zone">
+                  <span class="s4-chip-dot"></span>
+                  <strong>Above Zone</strong>
+                  <small>Over 85%</small>
+                </div>
+              </div>
 
-                <p id="gauge-caption" class="insights-note"></p>
-              </section>
-
-              <p class="insights-disclaimer">
-                These are exercise estimates, not medical advice or a health score.
+              <p class="s4-disclaimer">
+                Animation speed reflects the BPM you entered; it is not a live pulse monitor.
+                Exercise zones are estimates, not medical advice.
               </p>
             </div>
           </details>
+
           <h3>Estimated Exercise Ranges</h3>
 
           <div class="zone moderate">
@@ -314,32 +334,33 @@
         ></p>
 
         <!-- Sprint 2 - Calculation History -->
-        <section
-          class="history"
-          aria-labelledby="history-heading"
-        >
-          <h3 id="history-heading">
-            Saved Calculation History
-          </h3>
+        <!-- Sprint 4 UI enhancement: collapsible history, original entries preserved -->
+        <details id="history-details" class="history history-dropdown">
+          <summary id="history-heading" class="history-summary">
+            <span>Saved Calculation History</span>
+            <span id="history-count" class="history-count" aria-live="polite">(0)</span>
+          </summary>
 
-          <p
-            id="history-empty-state"
-            class="history-empty"
-          >
-            Successful calculations will appear here.
-          </p>
+          <div class="history-content">
+            <p
+              id="history-empty-state"
+              class="history-empty"
+            >
+              Successful calculations will appear here.
+            </p>
 
-          <ol id="history-list"></ol>
+            <ol id="history-list"></ol>
 
-          <button
-            type="button"
-            id="clear-history-btn"
-            class="secondary"
-            disabled
-          >
-            Clear Saved History
-          </button>
-        </section>
+            <button
+              type="button"
+              id="clear-history-btn"
+              class="secondary"
+              disabled
+            >
+              Clear Saved History
+            </button>
+          </div>
+        </details>
       </section>
     </main>
 
