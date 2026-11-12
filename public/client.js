@@ -40,6 +40,7 @@ function clearErrors() {
     const error = document.querySelector(`#${input.id}-error`);
     error.textContent = "";
     error.hidden = true;
+    input.setAttribute("aria-invalid", "false");
     input.removeAttribute("aria-invalid");
   }
 
@@ -286,7 +287,6 @@ copyResultsButton.addEventListener("click", async () => {
     // Copy the formatted results to the user's clipboard.
     await navigator.clipboard.writeText(text);
 
-    // Display confirmation after copying succeeds.
     copyStatus.textContent = "Results copied to clipboard.";
   } catch (error) {
     console.error("Unable to copy results.", error);
@@ -423,3 +423,315 @@ clearHistoryButton.addEventListener("click", () => {
 
 // Load saved calculations when the page opens.
 renderCalculationHistory();
+
+// =================================================
+// Giovanni Matos - Sprint 4: Animated Heart Rate Dashboard
+// Additive UI only. No existing calculations are changed.
+// =================================================
+
+(() => {
+  const panel = document.querySelector("#s4-panel");
+  if (!panel) return;
+
+  const heart = document.querySelector("#s4-heart");
+  const preview = document.querySelector("#s4-preview");
+  const bpmValue = document.querySelector("#s4-bpm");
+  const intensity = document.querySelector("#s4-intensity");
+  const percentValue = document.querySelector("#s4-percent");
+  const status = document.querySelector("#s4-energy-status");
+  const meter = document.querySelector(".s4-meter");
+  const fill = document.querySelector("#s4-fill");
+  const pointer = document.querySelector("#s4-pointer");
+  const burst = document.querySelector("#s4-burst");
+  const note = document.querySelector("#s4-bar-note");
+  const chips = document.querySelectorAll(".s4-zone-chip");
+
+  const reducedMotion = window.matchMedia(
+    "(prefers-reduced-motion: reduce)"
+  );
+
+  let lastData = null;
+  let frameId = null;
+
+  const zoneColors = {
+    "below-zone": "#627eaa",
+    moderate: "#319b81",
+    vigorous: "#3d75b3",
+    "above-zone": "#d7617c"
+  };
+
+  function cancelAnimation() {
+    if (frameId !== null) {
+      window.cancelAnimationFrame(frameId);
+    }
+
+    frameId = null;
+    burst.classList.remove("s4-burst-on");
+  }
+
+  function resetDashboard() {
+    cancelAnimation();
+    lastData = null;
+
+    panel.style.setProperty("--s4-beat", "1.2s");
+
+    preview.textContent = "Explore your animated exercise zones";
+    bpmValue.textContent = "--";
+    intensity.textContent = "Your exercise intensity";
+    percentValue.textContent = "Enter a current BPM to start";
+    status.textContent = "Ready";
+
+    fill.style.width = "0%";
+    pointer.hidden = true;
+
+    note.textContent =
+      "Enter a measured heart rate to see the bar fill.";
+
+    chips.forEach(chip => {
+      chip.classList.remove("s4-active");
+    });
+
+    meter.setAttribute(
+      "aria-label",
+      "No heart rate entered"
+    );
+  }
+
+  function setDashboardData(data) {
+    cancelAnimation();
+    lastData = data;
+
+    const max = Number(data.result);
+    const current = data.currentHeartRate;
+    const bpm = Number(current);
+
+    if (
+      current === null ||
+      current === undefined ||
+      current === "" ||
+      !Number.isFinite(bpm) ||
+      !Number.isFinite(max) ||
+      max <= 0
+    ) {
+      bpmValue.textContent = "--";
+      intensity.textContent = "Estimated exercise zones";
+      percentValue.textContent = "No current BPM provided";
+      status.textContent = "Waiting for BPM";
+
+      preview.textContent =
+        "Enter your current BPM to animate the gauge";
+
+      pointer.hidden = true;
+      fill.style.width = "0%";
+
+      chips.forEach(chip => {
+        chip.classList.remove("s4-active");
+      });
+
+      note.textContent =
+        "Moderate: " +
+        formatBpm(data.moderateZone.min) +
+        "–" +
+        formatBpm(data.moderateZone.max) +
+        " BPM. Vigorous: " +
+        formatBpm(data.vigorousZone.min) +
+        "–" +
+        formatBpm(data.vigorousZone.max) +
+        " BPM.";
+
+      return;
+    }
+
+    const percent = (bpm / max) * 100;
+
+    const label =
+      classificationLabels[data.classification] ||
+      "Estimated Exercise Intensity";
+
+    const color =
+      zoneColors[data.classification] || "#3d75b3";
+
+    // A higher entered BPM makes the heart beat faster.
+    const beatSeconds = Math.max(
+      0.42,
+      Math.min(1.7, 60 / bpm)
+    );
+
+    panel.style.setProperty(
+      "--s4-beat",
+      beatSeconds.toFixed(2) + "s"
+    );
+
+    panel.style.setProperty("--s4-accent", color);
+
+    preview.textContent =
+      formatBpm(bpm) +
+      " BPM · " +
+      formatBpm(percent) +
+      "% of max";
+
+    intensity.textContent = label;
+
+    percentValue.textContent =
+      formatBpm(percent) + "% of estimated maximum";
+
+    status.textContent = label;
+
+    note.textContent =
+      percent > 100
+        ? "Above 100% of estimated maximum; the visual bar stops at 100%."
+        : "Animated fill represents your entered BPM as a percentage of estimated maximum.";
+
+    meter.setAttribute(
+      "aria-label",
+      formatBpm(bpm) +
+      " BPM, " +
+      formatBpm(percent) +
+      "% of estimated maximum; " +
+      label
+    );
+
+    chips.forEach(chip => {
+      chip.classList.toggle(
+        "s4-active",
+        chip.dataset.s4Zone === data.classification
+      );
+    });
+
+    if (panel.open) {
+      playDashboard(bpm, percent);
+    }
+  }
+
+  function playDashboard(bpm, percent) {
+    cancelAnimation();
+
+    const limited = Math.max(
+      0,
+      Math.min(100, percent)
+    );
+
+    // Higher exercise intensity = faster fill animation.
+    const duration =
+      percent >= 85
+        ? 850
+        : percent >= 70
+          ? 1050
+          : percent >= 50
+            ? 1400
+            : 1750;
+
+    const thresholds = [50, 70, 85];
+    const crossed = new Set();
+
+    let startedAt = null;
+    pointer.hidden = false;
+
+    function draw(progress) {
+      const position = limited * progress;
+
+      bpmValue.textContent = formatBpm(
+        Math.round(bpm * progress)
+      );
+
+      fill.style.width = position + "%";
+      pointer.style.left = position + "%";
+
+      if (!reducedMotion.matches) {
+        for (const mark of thresholds) {
+          if (position >= mark && !crossed.has(mark)) {
+            crossed.add(mark);
+
+            burst.style.left = mark + "%";
+            burst.classList.remove("s4-burst-on");
+
+            // Restart the particle burst animation.
+            void burst.offsetWidth;
+
+            burst.classList.add("s4-burst-on");
+          }
+        }
+      }
+    }
+
+    if (reducedMotion.matches) {
+      draw(1);
+      return;
+    }
+
+    draw(0);
+
+    function tick(now) {
+      if (startedAt === null) {
+        startedAt = now;
+      }
+
+      const progress = Math.min(
+        (now - startedAt) / duration,
+        1
+      );
+
+      const easing =
+        1 - Math.pow(1 - progress, 3);
+
+      draw(easing);
+
+      if (progress < 1) {
+        frameId = window.requestAnimationFrame(tick);
+      } else {
+        frameId = null;
+        draw(1);
+      }
+    }
+
+    frameId = window.requestAnimationFrame(tick);
+  }
+
+  // Observe existing results without modifying displayResults().
+  const observer = new MutationObserver(() => {
+    if (results.hidden) {
+      resetDashboard();
+    } else if (latestCalculation && latestCalculation.data) {
+      setDashboardData(latestCalculation.data);
+    }
+  });
+
+  observer.observe(results, {
+    attributes: true,
+    attributeFilter: ["hidden"]
+  });
+
+  // Reopen the panel to replay the gauge animation.
+  panel.addEventListener("toggle", () => {
+    if (!panel.open) {
+      cancelAnimation();
+    } else if (lastData) {
+      setDashboardData(lastData);
+    }
+  });
+
+  resetDashboard();
+})();
+
+// =================================================
+// Sprint 4 UI refinement - Saved History Count
+// Keeps the existing Sprint 2 history functions unchanged.
+// =================================================
+
+(() => {
+  const historyCount = document.querySelector("#history-count");
+  if (!historyCount) return;
+
+  function updateHistoryCount() {
+    const count = historyList.children.length;
+    historyCount.textContent = `(${count})`;
+  }
+
+  // Existing renderCalculationHistory() updates the same history list.
+  // Observe its entries instead of modifying a teammate's function.
+  new MutationObserver(updateHistoryCount).observe(historyList, {
+    childList: true
+  });
+
+  updateHistoryCount();
+})();
