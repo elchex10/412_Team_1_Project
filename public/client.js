@@ -70,7 +70,31 @@ function getCalculationHistory() {
     }
 
     const history = JSON.parse(storedHistory);
-    return Array.isArray(history) ? history : [];
+
+    if (!Array.isArray(history)) {
+      return [];
+    }
+
+    // Remove previously stored current heart-rate values.
+    const sanitizedHistory = history.map((calculation) => ({
+      ...calculation,
+      currentBpm: null
+    }));
+
+    // Update existing browser storage if sensitive values were present.
+    const containsCurrentBpm = history.some(
+      (calculation) =>
+        calculation && calculation.currentBpm != null
+    );
+
+    if (containsCurrentBpm) {
+      window.localStorage.setItem(
+        HISTORY_STORAGE_KEY,
+        JSON.stringify(sanitizedHistory)
+      );
+    }
+
+    return sanitizedHistory;
   } catch (error) {
     console.error("Unable to load calculation history.", error);
     return [];
@@ -121,7 +145,7 @@ function renderCalculationHistory() {
 function saveCalculationHistory(age, data) {
   const calculation = {
     age: Number(age),
-    currentBpm: data.currentHeartRate,
+    currentBpm: null,
     maximumHeartRate: data.result,
     classification: data.classification
   };
