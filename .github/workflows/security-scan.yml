@@ -1,0 +1,102 @@
+name: Automated Security Scanning
+
+on:
+  push:
+    branches: [ main, master, "sprint-*" ]
+  pull_request:
+    branches: [ main, master ]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  security-events: write
+  actions: read
+
+jobs:
+  npm-audit-scan:
+    name: Dependency Security Scan (npm audit)
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Run npm audit & Generate Report
+        run: |
+          mkdir -p security-reports
+          REPORT_MD="security-reports/Security-Scan-Report.md"
+
+          echo "# Automated Security Scan Report — 412 Team 1 Project" > "$REPORT_MD"
+          echo "- **Branch:** \`${GITHUB_REF_NAME}\`" >> "$REPORT_MD"
+          echo "- **Commit:** \`${GITHUB_SHA}\`" >> "$REPORT_MD"
+          echo "- **Date (UTC):** $(date -u '+%Y-%m-%d %H:%M:%S UTC')" >> "$REPORT_MD"
+          echo "" >> "$REPORT_MD"
+
+          # Find all directories containing package.json (excluding node_modules)
+          PKG_DIRS=$(find . -name "package.json" -not -path "*/node_modules/*" -exec dirname {} \;)
+
+          if [ -z "$PKG_DIRS" ]; then
+            echo "No package.json found in repository." >> "$REPORT_MD"
+          else
+            for DIR in $PKG_DIRS; do
+              echo "## Package Directory: \`$DIR\`" >> "$REPORT_MD"
+              echo "" >> "$REPORT_MD"
+              pushd "$DIR" > /dev/null
+
+              # Ensure package-lock.json exists so npm audit can run
+              if [ ! -f "package-lock.json" ]; then
+                npm install --package-lock-only --ignore-scripts --no-audit > /dev/null 2>&1 || true
+              fi
+
+              SAFE_NAME=$(echo "$DIR" \vert{} sed 's\vert{}^\./\vert{}\vert{}; s\vert{}/\vert{}_\vert{}g; s\vert{}^\.$|root|')
+              npm audit --json > "${GITHUB_WORKSPACE}/security-reports/npm-audit-${SAFE_NAME}.json" || true
+
+              echo '```text' >> "${GITHUB_WORKSPACE}/$REPORT_MD"
+              npm audit || true
+              echo '```' >> "${GITHUB_WORKSPACE}/$REPORT_MD"
+              echo "" >> "${GITHUB_WORKSPACE}/$REPORT_MD"
+
+              popd > /dev/null
+            done
+          fi
+
+          # Publish report to the GitHub Actions Job Summary tab
+          cat "$REPORT_MD" >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Upload Security Scan Report Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: security-scan-report
+          path: security-reports/
+          retention-days: 30
+
+  codeql-scan:
+    name: Static Code Analysis (CodeQL)
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@v4
+        with:
+          languages: javascript-typescript
+
+      - name: Perform CodeQL Analysis
+        uses: github/codeql-action/analyze@v4
+        with:
+          output: sarif-results
+          upload: false
+
+      - name: Upload CodeQL SARIF Report
+        uses: actions/upload-artifact@v4
+        with:
+          name: codeql-sarif-report
+          path: sarif-results/
+          retention-days: 30
