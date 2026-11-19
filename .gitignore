@@ -1,1 +1,4 @@
 infra/main.json
+
+# Local Docker environment
+.env
