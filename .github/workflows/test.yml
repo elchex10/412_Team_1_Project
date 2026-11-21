@@ -31,3 +31,11 @@ jobs:
 
       - name: Run automated tests
         run: npm test
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Run AI evaluation suite
+        run: python evals/run_evals.py
